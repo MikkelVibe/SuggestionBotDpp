@@ -33,5 +33,5 @@ class Suggestion {
 
         Suggestion(std::string description, dpp::user creator);
 
-        dpp::message createMessage();
+        dpp::message createMessage(int votes);
 };

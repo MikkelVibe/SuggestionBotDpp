@@ -112,7 +112,7 @@ Suggestion::Suggestion(std::string description, dpp::user creator) {
     users = std::vector<VoteUser>(5);
 }
 
-dpp::message Suggestion::createMessage() {
+dpp::message Suggestion::createMessage(int votes) {
     dpp::embed embed = dpp::embed()
         .set_color(dpp::colors::sti_blue)
         .set_description("A new suggestion has been submitted! React below to vote.")
@@ -124,6 +124,10 @@ dpp::message Suggestion::createMessage() {
             "Suggestion",
             Suggestion::description,
             true
+        )
+        .add_field(
+            "Current status",
+            std::to_string(votes)
         )
         .set_footer(
             dpp::embed_footer()

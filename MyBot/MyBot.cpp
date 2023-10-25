@@ -5,18 +5,14 @@ const std::string    BOT_TOKEN    = "";
 std::vector<Suggestion> suggestions;
 std::vector<dpp::snowflake> roles;
 
-std::string suggestionChannel; 
-std::string suggestionApprovedChannel;
-std::string rolePermission;
+dpp::snowflake suggestionChannel; 
+dpp::snowflake approveChannel;
+dpp::snowflake rolePermission;
 
 MyBot myBot;
 
 void MyBot::addSuggestion(Suggestion toAdd) {
 	suggestions.push_back(toAdd);
-}
-
-void deleteMessage() {
-	
 }
 
 std::string getChannelUrl(std::string channelid, std::string guildid) {
@@ -26,8 +22,6 @@ std::string getChannelUrl(std::string channelid, std::string guildid) {
 std::string getRoleUrl(std::string roleid) {
 	return "<@&" + roleid + ">";
 }
-
-
 
 Suggestion* MyBot::findSuggestionMatch(std::string url) {
 	Suggestion* result = nullptr;
@@ -61,6 +55,22 @@ boolean isInList(std::string url) {
 	return returnBoolean;
 }
 
+boolean hasRole(dpp::guild_member guildMember) {
+	boolean found = false;
+	int i = 0;
+	while (!found && i < guildMember.get_roles().size()) {
+		dpp::snowflake role = guildMember.get_roles()[i];
+		if (role.str()._Equal(rolePermission.str())) {
+			found = true;
+		} 
+		else {
+			i++;
+		}
+	}
+	return found;
+}
+
+
 int main()
 {
 	/* Create bot cluster */
@@ -75,7 +85,7 @@ int main()
 		if (event.command.get_command_name() == "suggest") {
 			Suggestion newSuggestion(std::get<std::string>(event.get_parameter("suggestion")), event.command.get_issuing_user());
 
-			event.reply(newSuggestion.createMessage(), [&newSuggestion, event](const dpp::confirmation_callback_t& callback) {
+			event.reply(newSuggestion.createMessage(newSuggestion.getVotes()), [&newSuggestion, event](const dpp::confirmation_callback_t& callback) {
 				if (callback.is_error()) {
 					std::cout << callback.get_error().message << std::endl;
 				}
@@ -90,15 +100,14 @@ int main()
 
 							myBot.addSuggestion(newSuggestion);
 						}
-						});
+					});
 				}
 			});
 		}
 		if (event.command.get_command_name() == "config") {
-			const dpp::snowflake role = std::get<dpp::snowflake>(event.get_parameter("roles"));
-			const dpp::snowflake suggestionChannel = std::get<dpp::snowflake>(event.get_parameter("suggestionchannel"));
-			const dpp::snowflake approveChannel = std::get<dpp::snowflake>(event.get_parameter("suggestionchannel"));
-
+			rolePermission = std::get<dpp::snowflake>(event.get_parameter("role"));
+			suggestionChannel = std::get<dpp::snowflake>(event.get_parameter("suggestionchannel"));
+			approveChannel = std::get<dpp::snowflake>(event.get_parameter("approvechannel"));
 
 			dpp::embed embed = dpp::embed()
 				.set_color(dpp::colors::sti_blue)
@@ -109,7 +118,7 @@ int main()
 				)
 				.add_field(
 					"Required role",
-					getRoleUrl(role.str())
+					getRoleUrl(rolePermission.str())
 				)
 				.add_field(
 					"Output suggestion to",
@@ -153,9 +162,15 @@ int main()
 				else {
 					mess = dpp::message("Vote removed");
 				}
+
+				event.edit_original_response(suggestion->createMessage(suggestion->getVotes()));
+
 				event.reply((mess).set_flags(dpp::m_ephemeral));
 			}
 			else if (eventID == "downvote") {
+
+				Suggestion* suggestion = myBot.findSuggestionMatch(event.command.msg.get_url());
+
 				if (!suggestion->userHasVoteUp(*userClick) && suggestion->hasUser(*userClick)) {
 					suggestion->addVote(*userClick);
 				}
@@ -168,13 +183,24 @@ int main()
 				}
 				else {
 					mess = dpp::message("Vote removed");
+
+					event.edit_original_response(suggestion->createMessage(suggestion->getVotes())), [event](const dpp::command_completion_event_t& callback) {
+						event.reply("Updated suggestion");
+
+					};
+
+
+
 				}
-				event.reply((mess).set_flags(dpp::m_ephemeral));
 			}
 			else if (eventID == "approve") {
-				std::string votes = std::to_string(suggestion->getVotes());
+				const dpp::guild_member& issuer = event.command.member;
 
-				event.reply(urlOfEvent);
+				if (hasRole(issuer)) {
+					event.reply();
+				}
+
+				event.reply();
 			}
 		}
 		else {
@@ -186,8 +212,8 @@ int main()
 		if (dpp::run_once<struct register_bot_commands>()) {
 			dpp::slashcommand commandPermissions("config", "Set permissions and output channel", bot.me.id);
 
-			commandPermissions.add_option(dpp::command_option(dpp::co_role, "roles", "Tag the role that can approve suggestions", true));
-			commandPermissions.add_option(dpp::command_option(dpp::co_channel, "suggestchannel", "Tag the channel where suggestions are sent", true));
+			commandPermissions.add_option(dpp::command_option(dpp::co_role, "role", "Tag the role that can approve suggestions", true));
+			commandPermissions.add_option(dpp::command_option(dpp::co_channel, "suggestionchannel", "Tag the channel where suggestions are sent", true));
 			commandPermissions.add_option(dpp::command_option(dpp::co_channel, "approvechannel", "Tag the channel where approved suggestions are sent", true));
 
 			bot.global_command_create(commandPermissions);
