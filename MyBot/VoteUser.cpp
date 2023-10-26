@@ -1,18 +1,18 @@
 #include <dpp/dpp.h>
 #include "VoteUser.h"
 
-boolean VoteUser::getReactedUp() {
+boolean VoteUser::get_reacted_up() {
 	return hasReactedUp;
 }
-boolean VoteUser::getReactedDown() {
+boolean VoteUser::get_reacted_down() {
 	return hasReactedDown;
 }
 
-std::string VoteUser::getUserUrl() {
+std::string VoteUser::get_user_url() {
 	return userDpp.get_url();
 }
 
-void VoteUser::updateReactUp() {
+void VoteUser::update_react_up() {
 	if (!hasReactedUp) {
 		hasReactedUp = true;
 	}
@@ -21,7 +21,7 @@ void VoteUser::updateReactUp() {
 	}
 }
 
-void VoteUser::updateReactDown() {
+void VoteUser::update_react_down() {
 	if (!hasReactedDown) {
 		hasReactedDown = true;
 	}

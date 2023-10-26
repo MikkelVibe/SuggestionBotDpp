@@ -16,9 +16,10 @@
 class MyBot {
 	public:
 		Suggestion suggestionTemp;
+		Suggestion* get_temp_suggestion();
 		MyBot();
-		void addSuggestion(Suggestion toAdd);
-		Suggestion* findSuggestionMatch(std::string url);
-		void createAndAddToList(dpp::message message);
-		void setTempSuggestion(Suggestion* toSet);
+		void add_suggestion(Suggestion toAdd);
+		Suggestion* find_suggestion_match(std::string url);
+		void create_and_add_to_list(dpp::message message);
+		void set_temp_suggestion(Suggestion* toSet);
 };

@@ -1,7 +1,7 @@
 #include "Suggestion.h"
 #include <dpp/dpp.h>
 
-int Suggestion::getVotes() {
+int Suggestion::get_votes() {
 	return votes;
 }
 
@@ -9,71 +9,71 @@ Suggestion::Suggestion() {
 
 }
 
-dpp::message Suggestion::getMessage() {
+dpp::message Suggestion::get_message() {
     return messageOfSuggestion;
 }
 
-std::string Suggestion::getDescription() {
+std::string Suggestion::get_description() {
     return description;
 }
 
 
-void Suggestion::addVote(dpp::user user) {
+void Suggestion::add_vote(dpp::user user) {
     VoteUser* voteUser = nullptr;
-	if (hasUser(user)) {
-		voteUser = getUserInList(user);
+	if (has_user(user)) {
+		voteUser = get_user_in_list(user);
 	}
 	else {
-		addUser(VoteUser(user));
-        voteUser = getUserInList(user);
+		add_user(VoteUser(user));
+        voteUser = get_user_in_list(user);
 	}
 
-	if (voteUser->getReactedUp()) {
-		getUserInList(user)->updateReactUp();
+	if (voteUser->get_reacted_up()) {
+		get_user_in_list(user)->update_react_up();
         votes++;
 	}
 	else {
 		votes--;
 
-		getUserInList(user)->updateReactUp();
+		get_user_in_list(user)->update_react_up();
 	}
 }
       
-void Suggestion::subtractVote(dpp::user user) {
+void Suggestion::subtract_vote(dpp::user user) {
     VoteUser* voteUser = nullptr;
-    if (hasUser(user)) {
-        voteUser = getUserInList(user);
+    if (has_user(user)) {
+        voteUser = get_user_in_list(user);
     }
     else {
-        addUser(VoteUser(user));
-        voteUser = getUserInList(user);
+        add_user(VoteUser(user));
+        voteUser = get_user_in_list(user);
     }
 
-    if (voteUser->getReactedDown()) {
-        voteUser->updateReactDown();
+    if (voteUser->get_reacted_down()) {
+        voteUser->update_react_down();
         votes--;
     }
     else {
         votes++;
 
-        voteUser->updateReactDown();
+        voteUser->update_react_down();
     }
 }
 
-void Suggestion::setMessage(dpp::message newMessage) {
+void Suggestion::set_message(dpp::message newMessage) {
     messageOfSuggestion = newMessage;
 }
 
 
-void Suggestion::addUser(VoteUser userToAdd) {
+void Suggestion::add_user(VoteUser userToAdd) {
     users.push_back(userToAdd);
 }
 
-boolean Suggestion::hasUser(dpp::user user) {
+boolean Suggestion::has_user(dpp::user user) {
     boolean found = false;
     int i = 0;
     while (!found && i < users.size()) {
-        if (user.get_url()._Equal(users[i].getUserUrl())) {
+        if (user.get_url()._Equal(users[i].get_user_url())) {
             found = true;
         }
         else {
@@ -83,15 +83,14 @@ boolean Suggestion::hasUser(dpp::user user) {
     return found;
 }
 
-VoteUser* Suggestion::getUserInList(dpp::user user) {
+VoteUser* Suggestion::get_user_in_list(dpp::user user) {
     VoteUser* voteUser = nullptr;
     boolean found = false;
     int i = 0;
     while (!found && i < users.size()) {
-        if(user.get_url()._Equal(users[i].getUserUrl())) {
+        if(user.get_url()._Equal(users[i].get_user_url())) {
             found = true;
             voteUser = &users[i];
-
         }
         else {
             i++;
@@ -100,17 +99,17 @@ VoteUser* Suggestion::getUserInList(dpp::user user) {
     return voteUser;
 }
 
-boolean Suggestion::userHasVoteUp(dpp::user user) {
+boolean Suggestion::user_has_vote_up(dpp::user user) {
     boolean result = false;
-    if (hasUser(user)) {
-        result = getUserInList(user)->getReactedUp();
+    if (has_user(user)) {
+        result = get_user_in_list(user)->get_reacted_up();
     }
     return result;
 }
-boolean Suggestion::userHasVoteDown(dpp::user user) {
+boolean Suggestion::user_has_vote_down(dpp::user user) {
     boolean result = false;
-    if (hasUser(user)) {
-        result = getUserInList(user)->getReactedDown();
+    if (has_user(user)) {
+        result = get_user_in_list(user)->get_reacted_down();
     }
     return result;
 }
@@ -123,7 +122,7 @@ Suggestion::Suggestion(std::string newDescription, dpp::user newCreator, dpp::sn
     users = std::vector<VoteUser>(5);
 }
 
-dpp::message Suggestion::createMessage() {
+dpp::message Suggestion::create_message() {
     dpp::embed embed = dpp::embed()
         .set_color(dpp::colors::sti_blue)
         .set_description("A new suggestion has been submitted! React below to vote.")
@@ -172,6 +171,36 @@ dpp::message Suggestion::createMessage() {
             .set_id("approve")
         )
     );
-    
+    msg.set_channel_id(channelid);
+
+    return msg;
+}
+
+dpp::message Suggestion::create_approved_suggestion(dpp::snowflake approvedChannelID) {
+    dpp::embed embed = dpp::embed()
+        .set_color(dpp::colors::sti_blue)
+        .set_description("The following suggestion has been accepted!")
+        .add_field(
+            "Submitter",
+            creator.format_username()
+        )
+        .add_field(
+            "Suggestion",
+            description,
+            true
+        )
+        .add_field(
+            "Votes of suggestion",
+            std::to_string(votes)
+        )
+        .set_footer(
+            dpp::embed_footer()
+            .set_text("SuggestionBot")
+        )
+        .set_timestamp(time(0));
+
+    dpp::message msg(approvedChannelID, embed);
+
+    /* Add an action row, and then a button within the action row. */
     return msg;
 }

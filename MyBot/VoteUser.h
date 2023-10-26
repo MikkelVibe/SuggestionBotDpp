@@ -10,13 +10,13 @@ class VoteUser
 		dpp::user userDpp;
 
 	public:
-		boolean getReactedUp();
-		boolean getReactedDown();
+		boolean get_reacted_up();
+		boolean get_reacted_down();
 
-		void updateReactUp();
-		void updateReactDown();
+		void update_react_up();
+		void update_react_down();
 
-		std::string getUserUrl();
+		std::string get_user_url();
 
 		VoteUser(dpp::user user);
 		VoteUser();
