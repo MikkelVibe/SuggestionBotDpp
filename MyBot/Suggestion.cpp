@@ -5,9 +5,18 @@ int Suggestion::getVotes() {
 	return votes;
 }
 
-std::string Suggestion::getMessageURL() {
-    return messageURL;
+Suggestion::Suggestion() {
+
 }
+
+dpp::message Suggestion::getMessage() {
+    return messageOfSuggestion;
+}
+
+std::string Suggestion::getDescription() {
+    return description;
+}
+
 
 void Suggestion::addVote(dpp::user user) {
     VoteUser* voteUser = nullptr;
@@ -51,9 +60,10 @@ void Suggestion::subtractVote(dpp::user user) {
     }
 }
 
-void Suggestion::setMessage(std::string newMessage) {
-    messageURL = newMessage;
+void Suggestion::setMessage(dpp::message newMessage) {
+    messageOfSuggestion = newMessage;
 }
+
 
 void Suggestion::addUser(VoteUser userToAdd) {
     users.push_back(userToAdd);
@@ -105,24 +115,25 @@ boolean Suggestion::userHasVoteDown(dpp::user user) {
     return result;
 }
 
-Suggestion::Suggestion(std::string description, dpp::user creator) {
-    this->description = description;
-    this->creator = creator;
+Suggestion::Suggestion(std::string newDescription, dpp::user newCreator, dpp::snowflake newChannelid) {
+    description = newDescription;
+    creator = newCreator;
+    channelid = newChannelid;
     votes = 0;
     users = std::vector<VoteUser>(5);
 }
 
-dpp::message Suggestion::createMessage(int votes) {
+dpp::message Suggestion::createMessage() {
     dpp::embed embed = dpp::embed()
         .set_color(dpp::colors::sti_blue)
         .set_description("A new suggestion has been submitted! React below to vote.")
         .add_field(
             "Submitter",
-            Suggestion::creator.format_username()
+            creator.format_username()
         )
         .add_field(
             "Suggestion",
-            Suggestion::description,
+            description,
             true
         )
         .add_field(
@@ -135,7 +146,7 @@ dpp::message Suggestion::createMessage(int votes) {
         )
         .set_timestamp(time(0));
 
-    dpp::message msg(channel, embed);
+    dpp::message msg(channelid, embed);
 
     /* Add an action row, and then a button within the action row. */
     msg.add_component(

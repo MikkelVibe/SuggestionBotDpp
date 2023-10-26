@@ -15,7 +15,10 @@
 #endif
 class MyBot {
 	public:
+		Suggestion suggestionTemp;
+		MyBot();
 		void addSuggestion(Suggestion toAdd);
 		Suggestion* findSuggestionMatch(std::string url);
-
+		void createAndAddToList(dpp::message message);
+		void setTempSuggestion(Suggestion* toSet);
 };

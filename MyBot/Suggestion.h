@@ -4,18 +4,24 @@
 class Suggestion {
 	private:
         int votes;
-        std::string messageURL;
-        
+        dpp::message messageOfSuggestion;
+
         std::vector<VoteUser> users;
 
         dpp::user creator;
-        dpp::snowflake channel;
+
+        dpp::snowflake channelid;
+
         std::string description;
 
 	public:
-        std::string getMessageURL();
+        Suggestion();
 
-        void setMessage(std::string newMessage);
+        dpp::message getMessage();
+        
+        std::string getDescription();
+
+        void setMessage(dpp::message newMessage);
 
         int getVotes();
 
@@ -31,7 +37,7 @@ class Suggestion {
         boolean userHasVoteUp(dpp::user user);
         boolean userHasVoteDown(dpp::user user);
 
-        Suggestion(std::string description, dpp::user creator);
+        Suggestion(std::string newDescription, dpp::user newCreator, dpp::snowflake newChannel);
 
-        dpp::message createMessage(int votes);
+        dpp::message createMessage();
 };

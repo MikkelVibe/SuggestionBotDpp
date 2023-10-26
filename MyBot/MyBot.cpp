@@ -9,11 +9,25 @@ dpp::snowflake suggestionChannel;
 dpp::snowflake approveChannel;
 dpp::snowflake rolePermission;
 
+
+
 MyBot myBot;
+
+
+MyBot::MyBot() {
+
+}
 
 void MyBot::addSuggestion(Suggestion toAdd) {
 	suggestions.push_back(toAdd);
 }
+
+void MyBot::createAndAddToList(dpp::message message) {
+	suggestionTemp.setMessage(message);
+
+	myBot.addSuggestion(suggestionTemp);
+}
+
 
 std::string getChannelUrl(std::string channelid, std::string guildid) {
 	return "https://discord.com/channels/" + guildid + "/" + channelid;
@@ -29,7 +43,7 @@ Suggestion* MyBot::findSuggestionMatch(std::string url) {
 	boolean found = false;
 	while(!found && i < suggestions.size()) {
 		Suggestion* temp = &suggestions[i];
-		if (temp->getMessageURL()._Equal(url)) {
+		if (temp->getMessage().get_url()._Equal(url)) {
 			result = temp;
 			found = true;
 		}
@@ -45,7 +59,7 @@ boolean isInList(std::string url) {
 	int i = 0;
 	while (!returnBoolean && i < suggestions.size()) {
 		Suggestion* temp = &suggestions[i];
-		if (temp->getMessageURL()._Equal(url)) {
+		if (temp->getMessage().get_url()._Equal(url)) {
 			returnBoolean = true;
 		}
 		else {
@@ -53,6 +67,10 @@ boolean isInList(std::string url) {
 		}
 	}
 	return returnBoolean;
+}
+
+void MyBot::setTempSuggestion(Suggestion* toSet) {
+	suggestionTemp = *toSet;
 }
 
 boolean hasRole(dpp::guild_member guildMember) {
@@ -70,7 +88,6 @@ boolean hasRole(dpp::guild_member guildMember) {
 	return found;
 }
 
-
 int main()
 {
 	/* Create bot cluster */
@@ -83,9 +100,18 @@ int main()
 	bot.on_slashcommand([&bot](const dpp::slashcommand_t& event) {
 
 		if (event.command.get_command_name() == "suggest") {
-			Suggestion newSuggestion(std::get<std::string>(event.get_parameter("suggestion")), event.command.get_issuing_user());
+			std::string suggestionString = std::get<std::string>(event.get_parameter("suggestion"));
+			dpp::user userInQuestion = event.command.get_issuing_user();
+			dpp::snowflake channel = event.command.get_channel().id;
+			
+			Suggestion newSuggestion(suggestionString, userInQuestion, channel);
 
-			event.reply(newSuggestion.createMessage(newSuggestion.getVotes()), [&newSuggestion, event](const dpp::confirmation_callback_t& callback) {
+			myBot.setTempSuggestion(&newSuggestion);
+
+			std::cout << newSuggestion.getDescription();
+
+			//is saved here
+			event.reply(newSuggestion.createMessage(), [&newSuggestion, event](const dpp::confirmation_callback_t& callback) {
 				if (callback.is_error()) {
 					std::cout << callback.get_error().message << std::endl;
 				}
@@ -95,10 +121,7 @@ int main()
 							std::cout << callback.get_error().message << std::endl;
 						}
 						else {
-							dpp::message m = callback.get<dpp::message>();
-							newSuggestion.setMessage(m.get_url());
-
-							myBot.addSuggestion(newSuggestion);
+							myBot.createAndAddToList(callback.get<dpp::message>());
 						}
 					});
 				}
@@ -149,6 +172,8 @@ int main()
 			Suggestion* suggestion = myBot.findSuggestionMatch(urlOfEvent);
 
 			if (eventID == "upvote") {
+				
+
 				if (!suggestion->userHasVoteDown(*userClick) && suggestion->hasUser(*userClick)) {
 					suggestion->subtractVote(*userClick);
 				}
@@ -163,13 +188,23 @@ int main()
 					mess = dpp::message("Vote removed");
 				}
 
-				event.edit_original_response(suggestion->createMessage(suggestion->getVotes()));
+				
 
-				event.reply((mess).set_flags(dpp::m_ephemeral));
+				dpp::message messageLocation = suggestion->getMessage();
+				dpp::message newMessage = suggestion->createMessage();
+
+				newMessage.id = messageLocation.id;
+				newMessage.channel_id = messageLocation.channel_id;
+
+				bot.message_edit(newMessage);
+
+
+				
+
+				event.reply(mess);
+
 			}
 			else if (eventID == "downvote") {
-
-				Suggestion* suggestion = myBot.findSuggestionMatch(event.command.msg.get_url());
 
 				if (!suggestion->userHasVoteUp(*userClick) && suggestion->hasUser(*userClick)) {
 					suggestion->addVote(*userClick);
@@ -183,15 +218,19 @@ int main()
 				}
 				else {
 					mess = dpp::message("Vote removed");
-
-					event.edit_original_response(suggestion->createMessage(suggestion->getVotes())), [event](const dpp::command_completion_event_t& callback) {
-						event.reply("Updated suggestion");
-
-					};
-
-
-
 				}
+
+				dpp::message messageLocation = suggestion->getMessage();
+				dpp::message newMessage = suggestion->createMessage();
+
+				newMessage.id = messageLocation.id;
+				newMessage.channel_id = messageLocation.channel_id;
+
+				bot.message_edit(newMessage);
+
+				event.reply(mess);
+
+
 			}
 			else if (eventID == "approve") {
 				const dpp::guild_member& issuer = event.command.member;
@@ -204,7 +243,7 @@ int main()
 			}
 		}
 		else {
-			event.reply("Suggestion not in database");
+			event.reply("Suggestion not in database (LMAO DATABASE IS A VECTOR XDFDDDD)");
 		}
     });
 
