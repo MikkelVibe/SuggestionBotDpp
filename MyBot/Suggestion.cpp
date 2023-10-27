@@ -99,20 +99,7 @@ VoteUser* Suggestion::get_user_in_list(dpp::user user) {
     return voteUser;
 }
 
-boolean Suggestion::user_has_vote_up(dpp::user user) {
-    boolean result = false;
-    if (has_user(user)) {
-        result = get_user_in_list(user)->get_reacted_up();
-    }
-    return result;
-}
-boolean Suggestion::user_has_vote_down(dpp::user user) {
-    boolean result = false;
-    if (has_user(user)) {
-        result = get_user_in_list(user)->get_reacted_down();
-    }
-    return result;
-}
+
 
 Suggestion::Suggestion(std::string newDescription, dpp::user newCreator, dpp::snowflake newChannelid) {
     description = newDescription;

@@ -1,7 +1,10 @@
 #include "MyBot.h"
 #include <dpp/dpp.h>
 
+#include "Database.h"
+
 const std::string BOT_TOKEN = "";
+
 std::vector<Suggestion> suggestions;
 std::vector<dpp::snowflake> roles;
 
@@ -11,21 +14,15 @@ dpp::snowflake rolePermission;
 
 MyBot myBot;
 
+Database database;
+
 boolean isConfigured = false;
 
 MyBot::MyBot() {
 
 }
 
-void MyBot::add_suggestion(Suggestion toAdd) {
-	suggestions.push_back(toAdd);
-}
 
-void MyBot::create_and_add_to_list(dpp::message message) {
-	suggestionTemp.set_message(message);
-
-	myBot.add_suggestion(suggestionTemp);
-}
 
 dpp::snowflake get_suggestion_channel() {
 	return suggestionChannel;
@@ -37,38 +34,6 @@ std::string get_channel_url(std::string channelid, std::string guildid) {
 
 std::string get_role_url(std::string roleid) {
 	return "<@&" + roleid + ">";
-}
-
-Suggestion* MyBot::find_suggestion_match(std::string url) {
-	Suggestion* result = nullptr;
-	int i = 0;
-	boolean found = false;
-	while(!found && i < suggestions.size()) {
-		Suggestion* temp = &suggestions[i];
-		if (temp->get_message().get_url()._Equal(url)) {
-			result = temp;
-			found = true;
-		}
-		else {
-			i++;
-		}
-	}
-	return result;
-}
-
-boolean is_in_list(std::string url) {
-	boolean returnBoolean = false;
-	int i = 0;
-	while (!returnBoolean && i < suggestions.size()) {
-		Suggestion* temp = &suggestions[i];
-		if (temp->get_message().get_url()._Equal(url)) {
-			returnBoolean = true;
-		}
-		else {
-			i++;
-		}
-	}
-	return returnBoolean;
 }
 
 void MyBot::set_temp_suggestion(Suggestion* toSet) {
@@ -96,6 +61,10 @@ boolean has_role(dpp::guild_member guildMember) {
 
 int main()
 {
+	// Connect to database
+
+	database.connect_to_database();
+
 	/* Create bot cluster */
 	dpp::cluster bot(BOT_TOKEN);
 	
@@ -177,83 +146,86 @@ int main()
 
 		const dpp::user* userClick = &event.command.get_issuing_user();
 
-		if (is_in_list(urlOfEvent)) {
-			Suggestion* suggestion = myBot.find_suggestion_match(urlOfEvent);
+		if (!myBot.is_suggestion_in_database(urlOfEvent)) {
+			return;
+		}
 
-			if (eventID == "upvote") {
-				if (!suggestion->user_has_vote_down(*userClick) && suggestion->has_user(*userClick)) {
-					suggestion->subtract_vote(*userClick);
-				}
-				suggestion->add_vote(*userClick);
+		int suggestionID = myBot.find_suggestion_in_database(urlOfEvent);
 
-				dpp::message mess = nullptr;
-				if (!suggestion->get_user_in_list(*userClick)->get_reacted_up()) {
-					mess = dpp::message("Vote confirmed");
-				}
-				else {
-					mess = dpp::message("Vote removed");
-				}
-				dpp::message messageLocation = suggestion->get_message();
-				dpp::message newMessage = suggestion->create_message();
+		if (eventID == "upvote") {
 
-				newMessage.id = messageLocation.id;
-				newMessage.channel_id = messageLocation.channel_id;
 
-				bot.message_edit(newMessage);
-				
-				event.reply(mess.set_flags(dpp::m_ephemeral));
-			}
-			else if (eventID == "downvote") {
 
-				if (!suggestion->user_has_vote_up(*userClick) && suggestion->has_user(*userClick)) {
-					suggestion->add_vote(*userClick);
-				}
+			if (!suggestion->user_has_vote_down(*userClick) && suggestion->has_user(*userClick)) {
 				suggestion->subtract_vote(*userClick);
-
-				dpp::message mess = nullptr;
-				if (!suggestion->get_user_in_list(*userClick)->get_reacted_down()) {
-					mess = dpp::message("Vote confirmed");
-				}
-				else {
-					mess = dpp::message("Vote removed");
-				}
-
-				dpp::message messageLocation = suggestion->get_message();
-				dpp::message newMessage = suggestion->create_message();
-
-				newMessage.id = messageLocation.id;
-				newMessage.channel_id = messageLocation.channel_id;
-
-				bot.message_edit(newMessage);
-
-				event.reply(mess.set_flags(dpp::m_ephemeral));
 			}
-			else if (eventID == "approve") {
-				const dpp::guild_member& issuer = event.command.member;
-				
-				dpp::message mes = nullptr;
-				
-				if (has_role(issuer)) {
-					dpp::message currentMessage = event.command.get_context_message();
-					bot.message_delete(currentMessage.id, currentMessage.channel_id);
+			suggestion->add_vote(*userClick);
 
-					Suggestion* suggestionToGet = myBot.find_suggestion_match(currentMessage.get_url());
-
-					dpp::message approvedSuggestion = suggestionToGet->create_approved_suggestion(approveChannel);
-
-					bot.message_create(approvedSuggestion);
-
-					mes = dpp::message("Suggestion approved. Sent to: " + get_channel_url(approveChannel.str(), event.command.get_guild().id.str()));
-				}
-				else {
-					mes = dpp::message("You don't have permission to approve suggestions.");
-				}
-				event.reply(mes.set_flags(dpp::m_ephemeral));
+			dpp::message mess = nullptr;
+			if (!suggestion->get_user_in_list(*userClick)->get_reacted_up()) {
+				mess = dpp::message("Vote confirmed");
 			}
+			else {
+				mess = dpp::message("Vote removed");
+			}
+			dpp::message messageLocation = suggestion->get_message();
+			dpp::message newMessage = suggestion->create_message();
+
+			newMessage.id = messageLocation.id;
+			newMessage.channel_id = messageLocation.channel_id;
+
+			bot.message_edit(newMessage);
+
+			event.reply(mess.set_flags(dpp::m_ephemeral));
 		}
-		else {
-			event.reply("Suggestion not in database (LMAO DATABASE IS A VECTOR XDFDDDD)");
+		else if (eventID == "downvote") {
+
+			if (!suggestion->user_has_vote_up(*userClick) && suggestion->has_user(*userClick)) {
+				suggestion->add_vote(*userClick);
+			}
+			suggestion->subtract_vote(*userClick);
+
+			dpp::message mess = nullptr;
+			if (!suggestion->get_user_in_list(*userClick)->get_reacted_down()) {
+				mess = dpp::message("Vote confirmed");
+			}
+			else {
+				mess = dpp::message("Vote removed");
+			}
+
+			dpp::message messageLocation = suggestion->get_message();
+			dpp::message newMessage = suggestion->create_message();
+
+			newMessage.id = messageLocation.id;
+			newMessage.channel_id = messageLocation.channel_id;
+
+			bot.message_edit(newMessage);
+
+			event.reply(mess.set_flags(dpp::m_ephemeral));
 		}
+		else if (eventID == "approve") {
+			const dpp::guild_member& issuer = event.command.member;
+
+			dpp::message mes = nullptr;
+
+			if (has_role(issuer)) {
+				dpp::message currentMessage = event.command.get_context_message();
+				bot.message_delete(currentMessage.id, currentMessage.channel_id);
+
+				Suggestion* suggestionToGet = myBot.find_suggestion_match(currentMessage.get_url());
+
+				dpp::message approvedSuggestion = suggestionToGet->create_approved_suggestion(approveChannel);
+
+				bot.message_create(approvedSuggestion);
+
+				mes = dpp::message("Suggestion approved. Sent to: " + get_channel_url(approveChannel.str(), event.command.get_guild().id.str()));
+			}
+			else {
+				mes = dpp::message("You don't have permission to approve suggestions.");
+			}
+			event.reply(mes.set_flags(dpp::m_ephemeral));
+		}
+		
     });
 
 	bot.on_ready([&bot](const dpp::ready_t& event) {
