@@ -1,8 +1,9 @@
 #include "Database.h"
 
+
 const std::string server = "tcp://127.0.0.1:3306";
 const std::string username = "root";
-const std::string password = "";
+const std::string password = "Gse26fvrGse26fvr%";
 
 sql::Driver* driver;
 sql::Connection* con;
@@ -10,7 +11,6 @@ sql::Statement* stmt;
 sql::PreparedStatement* pstmt;
 sql::ResultSet* result;
 sql::Statement* stmt;
-
 
 // SUGGESTIONS
 
@@ -30,7 +30,7 @@ void Database::connect_to_database() {
 	}
 }
 
-int get_max_id_suggestions() {
+int Database::get_max_id_suggestions() {
 	pstmt = con->prepareStatement("SELECT MAX(iduser) FROM suggestions;");
 	result = pstmt->executeQuery();
 
@@ -45,6 +45,8 @@ void Database::add_suggestion_to_database(std::string url, std::string descripti
 	pstmt->setString(3, description);
 	pstmt->setString(4, creater_url);
 	pstmt->setInt(5, 0);
+
+	pstmt->execute();
 }
 
 int Database::find_suggestion_in_database(std::string url) {
@@ -80,7 +82,7 @@ int Database::get_max_id_users() {
 	return result->getInt(1);
 }
 
-void Database::add_user_to_database(int count, std::string userID, std::string discordName, boolean hasVotedUp, boolean hasVotedDown, int suggestionID) {
+void Database::add_user_to_database(std::string userID, std::string discordName, boolean hasVotedUp, boolean hasVotedDown, int suggestionID) {
 	pstmt = con->prepareStatement("INSERT INTO user(iduser, discord_id, discord_username, hasVotedUp, hasVotedDown, suggestion_id) VALUES(?, ?, ?, ?, ?, ?)");
 
 	pstmt->setInt(1, get_max_id_users()+1);
@@ -89,7 +91,11 @@ void Database::add_user_to_database(int count, std::string userID, std::string d
 	pstmt->setBoolean(4, hasVotedUp);
 	pstmt->setBoolean(5, hasVotedDown);
 	pstmt->setInt(6, suggestionID);
+
+	pstmt->execute();
 }
+
+
 
 std::vector<int> Database::find_users_in_suggestion(int suggestionID) {
 	std::vector<int> returnVector;
@@ -105,20 +111,56 @@ std::vector<int> Database::find_users_in_suggestion(int suggestionID) {
 	return returnVector;
 }
 
+int find_user(int discorduserid) {
+	int i = -1;
 
-boolean Database::user_has_vote_up(dpp::user user) {
-	boolean result = false;
-	if (has_user(user)) {
-		result = get_user_in_list(user)->get_reacted_up();
+	pstmt = con->prepareStatement("SELECT * FROM user;");
+	result = pstmt->executeQuery();
+
+	while (result->next()) {
+		if (result->getInt(2) == discorduserid) {
+			i = result->getInt(1);
+		}
 	}
-	return result;
+	return i;
 }
-boolean Database::user_has_vote_down(dpp::user user) {
-	boolean result = false;
-	if (has_user(user)) {
-		result = get_user_in_list(user)->get_reacted_down();
+
+boolean Database::user_has_vote_up(int discorduserid) {
+	boolean resultBoolean = false;
+	
+	pstmt = con->prepareStatement("SELECT * FROM user");
+	result = pstmt->executeQuery();
+
+	while (result->next()) {
+		if (find_user(discorduserid) == result->getInt(1)) {
+			if (result->getBoolean(4)) {
+				resultBoolean = true;
+			}
+			else {
+				resultBoolean = false;
+			}
+		}
 	}
-	return result;
+	return resultBoolean;
+}
+
+boolean Database::user_has_vote_down(int discorduserid) {
+	boolean resultBoolean = false;
+
+	pstmt = con->prepareStatement("SELECT * FROM user");
+	result = pstmt->executeQuery();
+
+	while (result->next()) {
+		if (find_user(discorduserid) == result->getInt(1)) {
+			if (result->getBoolean(5)) {
+				resultBoolean = true;
+			}
+			else {
+				resultBoolean = false;
+			}
+		}
+	}
+	return resultBoolean;
 }
 
 // SERVER CONFIGS

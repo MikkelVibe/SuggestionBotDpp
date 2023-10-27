@@ -7,14 +7,25 @@
 #pragma once
 class Database
 {
+	private:
+		int get_max_id_suggestions();
+		int get_max_id_users();
+
+
 	public:
 		// Database handling
 		void connect_to_database();
 
+		// Suggestions
 		int find_suggestion_in_database(std::string url);
 		boolean is_suggestion_in_database(std::string url);
 		void add_suggestion_to_database(std::string url, std::string description, std::string creater_url);
 
-		void add_user_to_database(int count, std::string userID, boolean hasVotedUp, boolean hasVotedDown, int suggestionID);
+		// Users
+		void add_user_to_database(std::string userID, std::string discordName, boolean hasVotedUp, boolean hasVotedDown, int suggestionID);
 		std::vector<int> find_users_in_suggestion(int suggestionID);
+		boolean user_has_vote_up(int idInDB);
+		boolean user_has_vote_down(int idInDB);
+
+		// Config
 };

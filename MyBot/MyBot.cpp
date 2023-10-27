@@ -3,7 +3,7 @@
 
 #include "Database.h"
 
-const std::string BOT_TOKEN = "";
+const std::string BOT_TOKEN = "MTE2NTY2NTMwNzAxNzM2NzU2Mg.GNAeFy.xiEQhj4wZoh3crGTqdSXxVGZV4lLJtACsZ5KWU";
 
 std::vector<Suggestion> suggestions;
 std::vector<dpp::snowflake> roles;
@@ -144,18 +144,18 @@ int main()
 		
 		std::string urlOfEvent = event.command.msg.get_url();
 
-		const dpp::user* userClick = &event.command.get_issuing_user();
 
-		if (!myBot.is_suggestion_in_database(urlOfEvent)) {
+		// START HERE NOOB XD
+
+		const std::stoi userClick = event.command.get_issuing_user().id.str();
+
+		if (!database.is_suggestion_in_database(urlOfEvent)) {
 			return;
 		}
 
-		int suggestionID = myBot.find_suggestion_in_database(urlOfEvent);
+		int suggestionID = database.find_suggestion_in_database(urlOfEvent);
 
 		if (eventID == "upvote") {
-
-
-
 			if (!suggestion->user_has_vote_down(*userClick) && suggestion->has_user(*userClick)) {
 				suggestion->subtract_vote(*userClick);
 			}
