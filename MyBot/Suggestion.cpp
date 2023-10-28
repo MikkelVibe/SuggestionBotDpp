@@ -18,47 +18,7 @@ std::string Suggestion::get_description() {
 }
 
 
-void Suggestion::add_vote(dpp::user user) {
-    VoteUser* voteUser = nullptr;
-	if (has_user(user)) {
-		voteUser = get_user_in_list(user);
-	}
-	else {
-		add_user(VoteUser(user));
-        voteUser = get_user_in_list(user);
-	}
 
-	if (voteUser->get_reacted_up()) {
-		get_user_in_list(user)->update_react_up();
-        votes++;
-	}
-	else {
-		votes--;
-
-		get_user_in_list(user)->update_react_up();
-	}
-}
-      
-void Suggestion::subtract_vote(dpp::user user) {
-    VoteUser* voteUser = nullptr;
-    if (has_user(user)) {
-        voteUser = get_user_in_list(user);
-    }
-    else {
-        add_user(VoteUser(user));
-        voteUser = get_user_in_list(user);
-    }
-
-    if (voteUser->get_reacted_down()) {
-        voteUser->update_react_down();
-        votes--;
-    }
-    else {
-        votes++;
-
-        voteUser->update_react_down();
-    }
-}
 
 void Suggestion::set_message(dpp::message newMessage) {
     messageOfSuggestion = newMessage;

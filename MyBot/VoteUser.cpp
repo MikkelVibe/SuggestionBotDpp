@@ -13,12 +13,7 @@ std::string VoteUser::get_user_url() {
 }
 
 void VoteUser::update_react_up() {
-	if (!hasReactedUp) {
-		hasReactedUp = true;
-	}
-	else {
-		hasReactedUp = false;
-	}
+	
 }
 
 void VoteUser::update_react_down() {

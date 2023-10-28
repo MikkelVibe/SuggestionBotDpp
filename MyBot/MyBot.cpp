@@ -140,25 +140,28 @@ int main()
         /* Button clicks are still interactions, and must be replied to in some form to
          * prevent the "this interaction has failed" message from Discord to the user.
          */
-		std::string eventID = event.custom_id;
-		
 		std::string urlOfEvent = event.command.msg.get_url();
 
-
-		// START HERE NOOB XD
-
-		const std::stoi userClick = event.command.get_issuing_user().id.str();
 
 		if (!database.is_suggestion_in_database(urlOfEvent)) {
 			return;
 		}
 
+		std::string eventID = event.custom_id;
+
 		int suggestionID = database.find_suggestion_in_database(urlOfEvent);
+		
+		std::string userClick = event.command.get_issuing_user().id.str();
+
+		sql::SQLString userClickSQL = userClick.c_str();
 
 		if (eventID == "upvote") {
-			if (!suggestion->user_has_vote_down(*userClick) && suggestion->has_user(*userClick)) {
-				suggestion->subtract_vote(*userClick);
+			if (!database.user_has_vote_down(userClickSQL, suggestionID)) {
+				database.subtract_vote(userClickSQL, suggestionID);
 			}
+
+
+
 			suggestion->add_vote(*userClick);
 
 			dpp::message mess = nullptr;

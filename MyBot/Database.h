@@ -20,12 +20,26 @@ class Database
 		int find_suggestion_in_database(std::string url);
 		boolean is_suggestion_in_database(std::string url);
 		void add_suggestion_to_database(std::string url, std::string description, std::string creater_url);
+		void add_vote(dpp::user user, int suggestionIDDB);
+		void subtract_vote(dpp::user user, int suggestionIDDB);
 
 		// Users
 		void add_user_to_database(std::string userID, std::string discordName, boolean hasVotedUp, boolean hasVotedDown, int suggestionID);
 		std::vector<int> find_users_in_suggestion(int suggestionID);
-		boolean user_has_vote_up(int idInDB);
-		boolean user_has_vote_down(int idInDB);
+		boolean user_has_vote_up(sql::SQLString discorduserid, int suggestionDBID);
+		boolean user_has_vote_down(sql::SQLString discorduserid, int suggestionDBID);
+		int find_user(sql::SQLString discorduserid, int suggestionDBID);
+		boolean is_user_in_suggestion(sql::SQLString discorduseridDB, int suggestionDBID);
+
+		void update_react_up(sql::SQLString discorduserid, int suggestionDBID);
+		void update_react_down(sql::SQLString discorduserid, int suggestionDBID);
 
 		// Config
+		void add_config(std::string guild_id, std::string suggest_channel_id, std::string approve_channel_id, std::string role_id);
+		int find_config(std::string guild_id);
+
+		void update_config_suggest_channel_id(std::string suggest_channel_id, int configID);
+		void update_config_approve_channel_id(std::string approve_channel_id, int configID);
+		void update_config_role_id(std::string role_id, int configID);
+
 };
