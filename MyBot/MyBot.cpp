@@ -3,7 +3,7 @@
 #include "Suggestion.h"
 #include "Database.h"
 
-const std::string BOT_TOKEN = "MTE2NTY2NTMwNzAxNzM2NzU2Mg.G1u2E7.7WzO-UurEH4KVsRHRQnpKMb7ANXXYXbu5tsbz8";
+const std::string BOT_TOKEN = "";
 
 std::vector<Suggestion> suggestions;
 std::vector<dpp::snowflake> roles;
