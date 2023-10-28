@@ -11,7 +11,6 @@ class Database
 		int get_max_id_suggestions();
 		int get_max_id_users();
 
-
 	public:
 		// Database handling
 		void connect_to_database();
@@ -37,6 +36,8 @@ class Database
 		// Config
 		void add_config(std::string guild_id, std::string suggest_channel_id, std::string approve_channel_id, std::string role_id);
 		int find_config(std::string guild_id);
+		
+		std::vector<int> different_value_locations(std::string guild_id, std::string suggest_channel_id, std::string approve_channel_id, std::string role_id);
 
 		void update_config_suggest_channel_id(std::string suggest_channel_id, int configID);
 		void update_config_approve_channel_id(std::string approve_channel_id, int configID);

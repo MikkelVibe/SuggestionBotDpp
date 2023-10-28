@@ -1,9 +1,9 @@
 #include "MyBot.h"
 #include <dpp/dpp.h>
-
+#include "Suggestion.h"
 #include "Database.h"
 
-const std::string BOT_TOKEN = "";
+const std::string BOT_TOKEN = "MTE2NTY2NTMwNzAxNzM2NzU2Mg.G1u2E7.7WzO-UurEH4KVsRHRQnpKMb7ANXXYXbu5tsbz8";
 
 std::vector<Suggestion> suggestions;
 std::vector<dpp::snowflake> roles;
@@ -14,9 +14,12 @@ dpp::snowflake rolePermission;
 
 MyBot myBot;
 
+Suggestion* Instance = Suggestion::get_instance();
+
+Suggestion instance = *Instance;
+
 Database database;
 
-boolean isConfigured = false;
 
 MyBot::MyBot() {
 
@@ -73,21 +76,12 @@ int main()
 
 	/* Handle slash command */
 	bot.on_slashcommand([&bot](const dpp::slashcommand_t& event) {
-		if (isConfigured) {
+		if (database.find_config(event.command.get_guild().id.str()) != -1) {
 			if (event.command.get_command_name() == "suggest") {
 				std::string suggestionString = std::get<std::string>(event.get_parameter("suggestion"));
 				dpp::user userInQuestion = event.command.get_issuing_user();
 
-				std::cout << get_channel_url(suggestionChannel.str(), event.command.get_guild().id.str());
-
-				Suggestion newSuggestion(suggestionString, userInQuestion, suggestionChannel);
-
-				myBot.set_temp_suggestion(&newSuggestion);
-
-				std::cout << newSuggestion.get_description();
-				
-				//is saved here
-				bot.message_create(newSuggestion.create_message(), [&newSuggestion, &bot](const dpp::confirmation_callback_t& callback) {
+				bot.message_create(instance.create_message(suggestionString, userInQuestion, suggestionChannel, 0), [&bot](const dpp::confirmation_callback_t& callback) {
 					if (callback.is_error()) {
 						std::cout << callback.get_error().message << std::endl;
 					}
@@ -99,16 +93,40 @@ int main()
 			}
 		}
 		else if (event.command.get_command_name() == "config") {
-			if (!isConfigured) {
-				isConfigured = true;
-			}
 			rolePermission = std::get<dpp::snowflake>(event.get_parameter("role"));
 			suggestionChannel = std::get<dpp::snowflake>(event.get_parameter("suggestionchannel"));
 			approveChannel = std::get<dpp::snowflake>(event.get_parameter("approvechannel"));
 
+			std::string description;
+
+			std::string guildId = event.command.get_guild().id.str();
+
+			if (database.find_config(guildId) == -1) {
+				database.add_config(guildId, suggestionChannel.str(), approveChannel.str(), rolePermission.str());
+				description = "Created config with";
+			}
+			else {
+				std::vector<int> locations = database.different_value_locations(guildId, suggestionChannel.str(), approveChannel.str(), rolePermission.str());
+
+				int configDBID = database.find_config(guildId);
+
+				for (int location : locations) {
+					if (location == 1) {
+						database.update_config_suggest_channel_id(suggestionChannel.str(), configDBID);
+					}
+					else if (location == 2) {
+						database.update_config_approve_channel_id(approveChannel.str(), configDBID);
+					}
+					else if (location == 3) {
+						database.update_config_role_id(rolePermission.str(), configDBID);
+					}
+				}
+				description = "Updated config to";
+			}
+
 			dpp::embed embed = dpp::embed()
 				.set_color(dpp::colors::sti_blue)
-				.set_description("Updated config to")
+				.set_description(description)
 				.set_footer(
 					dpp::embed_footer()
 					.set_text("SuggestionBot")
@@ -142,7 +160,6 @@ int main()
          */
 		std::string urlOfEvent = event.command.msg.get_url();
 
-
 		if (!database.is_suggestion_in_database(urlOfEvent)) {
 			return;
 		}
@@ -151,28 +168,26 @@ int main()
 
 		int suggestionID = database.find_suggestion_in_database(urlOfEvent);
 		
-		std::string userClick = event.command.get_issuing_user().id.str();
+		dpp::user user = event.command.get_issuing_user();
 
-		sql::SQLString userClickSQL = userClick.c_str();
+		sql::SQLString userClick = user.id.str().c_str();
 
 		if (eventID == "upvote") {
-			if (!database.user_has_vote_down(userClickSQL, suggestionID)) {
-				database.subtract_vote(userClickSQL, suggestionID);
+			if (!database.user_has_vote_down(userClick, suggestionID)) {
+				database.subtract_vote(user, suggestionID);
 			}
 
-
-
-			suggestion->add_vote(*userClick);
+			database.add_vote(user, suggestionID);
 
 			dpp::message mess = nullptr;
-			if (!suggestion->get_user_in_list(*userClick)->get_reacted_up()) {
+			if (!database.user_has_vote_up(userClick, suggestionID)) {
 				mess = dpp::message("Vote confirmed");
 			}
 			else {
 				mess = dpp::message("Vote removed");
 			}
-			dpp::message messageLocation = suggestion->get_message();
-			dpp::message newMessage = suggestion->create_message();
+
+			dpp::message newMessage = Suggestion.create_message();
 
 			newMessage.id = messageLocation.id;
 			newMessage.channel_id = messageLocation.channel_id;

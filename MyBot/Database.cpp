@@ -285,7 +285,9 @@ void Database::add_config(std::string guild_id, std::string suggest_channel_id, 
 int Database::find_config(std::string guild_id) {
 	int i = -1;
 
-	pstmt = con->prepareStatement("SELECT * FROM server_config WHERE guild_id = '" + guild_id + "'");
+	pstmt = con->prepareStatement("SELECT * FROM server_config WHERE guild_id = (?)");
+	pstmt->setString(1, guild_id);
+
 	result = pstmt->executeQuery();
 
 	if (result->next()) {
@@ -295,6 +297,23 @@ int Database::find_config(std::string guild_id) {
 	return i;
 }
 
+std::vector<int> Database::different_value_locations(std::string guild_id, std::string suggest_channel_id, std::string approve_channel_id, std::string role_id) {
+	std::vector<int> returnVector;
+
+	pstmt = con->prepareStatement("SELECT * FROM server_config WHERE guild_id = (?)");
+	pstmt->setString(1, guild_id);
+	result = pstmt->executeQuery();
+
+	if (result->getString(2) == convert_string_to_sqlstring(suggest_channel_id)) {
+		returnVector.push_back(2);
+	}
+	if (result->getString(3) == convert_string_to_sqlstring(approve_channel_id)) {
+		returnVector.push_back(3);
+	}
+	if (result->getString(4) == convert_string_to_sqlstring(role_id)) {
+		returnVector.push_back(4);
+	}
+}
 
 void Database::update_config_suggest_channel_id(std::string suggest_channel_id, int configID) {
 	pstmt = con->prepareStatement("UPDATE server_config SET suggest_channel_id = (?) WHERE guild_id = (?)");

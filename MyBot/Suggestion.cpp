@@ -1,75 +1,21 @@
 #include "Suggestion.h"
 #include <dpp/dpp.h>
 
-int Suggestion::get_votes() {
-	return votes;
-}
+Suggestion* Suggestion::instance = nullptr;;
 
 Suggestion::Suggestion() {
-
+    
 }
 
-dpp::message Suggestion::get_message() {
-    return messageOfSuggestion;
-}
-
-std::string Suggestion::get_description() {
-    return description;
-}
-
-
-
-
-void Suggestion::set_message(dpp::message newMessage) {
-    messageOfSuggestion = newMessage;
-}
-
-
-void Suggestion::add_user(VoteUser userToAdd) {
-    users.push_back(userToAdd);
-}
-
-boolean Suggestion::has_user(dpp::user user) {
-    boolean found = false;
-    int i = 0;
-    while (!found && i < users.size()) {
-        if (user.get_url()._Equal(users[i].get_user_url())) {
-            found = true;
-        }
-        else {
-            i++;
-        }
+Suggestion *Suggestion::get_instance() {
+    if (instance == nullptr) {
+        instance = new Suggestion();
     }
-    return found;
-}
-
-VoteUser* Suggestion::get_user_in_list(dpp::user user) {
-    VoteUser* voteUser = nullptr;
-    boolean found = false;
-    int i = 0;
-    while (!found && i < users.size()) {
-        if(user.get_url()._Equal(users[i].get_user_url())) {
-            found = true;
-            voteUser = &users[i];
-        }
-        else {
-            i++;
-        }
-    }
-    return voteUser;
+    return instance;
 }
 
 
-
-Suggestion::Suggestion(std::string newDescription, dpp::user newCreator, dpp::snowflake newChannelid) {
-    description = newDescription;
-    creator = newCreator;
-    channelid = newChannelid;
-    votes = 0;
-    users = std::vector<VoteUser>(5);
-}
-
-dpp::message Suggestion::create_message() {
+dpp::message Suggestion::create_message(std::string description, dpp::user creator, dpp::snowflake channelid, int votes) {
     dpp::embed embed = dpp::embed()
         .set_color(dpp::colors::sti_blue)
         .set_description("A new suggestion has been submitted! React below to vote.")
@@ -123,7 +69,7 @@ dpp::message Suggestion::create_message() {
     return msg;
 }
 
-dpp::message Suggestion::create_approved_suggestion(dpp::snowflake approvedChannelID) {
+dpp::message static create_approved_suggestion(dpp::snowflake approvedChannelID, std::string description, dpp::user creator, int votes) {
     dpp::embed embed = dpp::embed()
         .set_color(dpp::colors::sti_blue)
         .set_description("The following suggestion has been accepted!")

@@ -2,20 +2,15 @@
 #include "VoteUser.h"
 
 class Suggestion {
-	private:
-        int votes;
-        dpp::message messageOfSuggestion;
-
-        std::vector<VoteUser> users;
-
-        dpp::user creator;
-
-        dpp::snowflake channelid;
-
-        std::string description;
-
-	public:
+    private:
         Suggestion();
+
+        static Suggestion* instance;
+	public:
+
+
+
+        static Suggestion* get_instance();
 
         dpp::message get_message();
         
@@ -39,6 +34,5 @@ class Suggestion {
 
         Suggestion(std::string newDescription, dpp::user newCreator, dpp::snowflake newChannel);
 
-        dpp::message create_approved_suggestion(dpp::snowflake approvedChannelID);
-        dpp::message create_message();
+        dpp::message create_message(std::string description, dpp::user creator, dpp::snowflake channelid, int votes)
 };
