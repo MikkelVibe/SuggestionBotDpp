@@ -12,8 +12,22 @@ MyBot myBot;
 
 Database database;
 
+int guildid;
+
 MyBot::MyBot() {
 
+}
+
+int get_temp_guild_id() {
+	return guildid;
+}
+
+void set_temp_guild_id(int number) {
+	guildid = number;
+}
+
+void add_suggestion(std::string url, std::string description, std::string creater_url, int configID) {
+	database.add_suggestion_to_database(url, description, creater_url, configID);
 }
 
 std::string get_channel_url(std::string channelid, std::string guildid) {
@@ -41,6 +55,10 @@ boolean has_role(dpp::guild_member guildMember, int configID) {
 
 int main()
 {
+	// Connect to database
+	database.connect_to_database();
+
+	/* Get token from file and create bot cluster */
 	std::string filename = "C:\\Users\\Mikkel\\Documents\\GitHub\\SuggestionBotDpp\\token.txt";
 	std::string file_contents;
 
@@ -55,14 +73,8 @@ int main()
 	else {
 		std::cerr << "Error: Unable to open the file." << std::endl;
 	}
-
 	BOT_TOKEN = file_contents;
 
-	// Connect to database
-
-	database.connect_to_database();
-
-	/* Create bot cluster */
 	dpp::cluster bot(BOT_TOKEN);
 	
 	/* Output simple log messages to stdout */
@@ -75,12 +87,14 @@ int main()
 				std::string suggestionString = std::get<std::string>(event.get_parameter("suggestion"));
 				dpp::user userInQuestion = event.command.get_issuing_user();
 
-				bot.message_create(Suggestion::create_message(suggestionString, userInQuestion, database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())), 0), [&bot, &suggestionString, &userInQuestion](const dpp::confirmation_callback_t& callback) {
+				set_temp_guild_id(database.find_config(event.command.get_guild().id.str()));
+
+				bot.message_create(Suggestion::create_message(suggestionString, userInQuestion, database.get_suggest_channel_id(get_temp_guild_id()), 0), [&bot, &suggestionString, &userInQuestion](const dpp::confirmation_callback_t& callback) {
 					if (callback.is_error()) {
 						std::cout << callback.get_error().message << std::endl;
 					}
 					else {
-						database.add_suggestion_to_database(callback.get<dpp::message>().get_url(), suggestionString, userInQuestion.get_url());
+						add_suggestion(callback.get<dpp::message>().get_url(), suggestionString, userInQuestion.get_url(), get_temp_guild_id());
 					}
 				});
 				event.reply(dpp::message("Suggestion created in: " + get_channel_url(database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())), event.command.get_guild().id.str())).set_flags(dpp::m_ephemeral));
@@ -170,9 +184,6 @@ int main()
 		dpp::message mess = nullptr;
 
 		if (eventID == "upvote") {
-			if (!database.user_has_vote_down(userClick, suggestionID)) {
-				database.subtract_vote(user, suggestionID);
-			}
 
 			database.add_vote(user, suggestionID);
 
@@ -188,6 +199,8 @@ int main()
 			dpp::user* user = dpp::find_user(database.get_creator_discord_id(suggestionID));
 			dpp::channel* channel_id = dpp::find_channel(database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())));
 			
+			std::cout << description << user->format_username() << channel_id->id.str();
+
 			dpp::message newMessage = Suggestion::create_message(description, *user, channel_id->id.str(), suggestionID);
 
 			bot.message_edit(newMessage);
@@ -195,10 +208,6 @@ int main()
 			event.reply(mess.set_flags(dpp::m_ephemeral));
 		}
 		else if (eventID == "downvote") {
-
-			if (!database.user_has_vote_up(userClick, suggestionID)) {
-				database.add_vote(user, suggestionID);
-			}
 
 			database.subtract_vote(user, suggestionID);
 

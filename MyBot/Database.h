@@ -18,7 +18,7 @@ class Database
 		// Suggestions
 		int find_suggestion_in_database(std::string url);
 		boolean is_suggestion_in_database(std::string url);
-		void add_suggestion_to_database(std::string url, std::string description, std::string creater_url);
+		void add_suggestion_to_database(std::string url, std::string description, std::string creater_url, int configID);
 		void add_vote(dpp::user user, int suggestionIDDB);
 		void subtract_vote(dpp::user user, int suggestionIDDB);
 		std::string get_description(int suggestionINDB);
