@@ -69,7 +69,7 @@ dpp::message Suggestion::create_message(std::string description, dpp::user creat
     return msg;
 }
 
-dpp::message static create_approved_suggestion(dpp::snowflake approvedChannelID, std::string description, dpp::user creator, int votes) {
+dpp::message Suggestion::create_approved_suggestion(dpp::snowflake approvedChannelID, std::string description, dpp::user creator, int votes) {
     dpp::embed embed = dpp::embed()
         .set_color(dpp::colors::sti_blue)
         .set_description("The following suggestion has been accepted!")
@@ -94,6 +94,5 @@ dpp::message static create_approved_suggestion(dpp::snowflake approvedChannelID,
 
     dpp::message msg(approvedChannelID, embed);
 
-    /* Add an action row, and then a button within the action row. */
     return msg;
 }

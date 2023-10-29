@@ -184,7 +184,6 @@
     <ClCompile Include="Database.cpp" />
     <ClCompile Include="MyBot.cpp" />
     <ClCompile Include="Suggestion.cpp" />
-    <ClCompile Include="VoteUser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Database.h" />
@@ -232,7 +231,6 @@
     <ClInclude Include="MyBot.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Suggestion.h" />
-    <ClInclude Include="VoteUser.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MyBot.rc" />

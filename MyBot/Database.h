@@ -21,6 +21,11 @@ class Database
 		void add_suggestion_to_database(std::string url, std::string description, std::string creater_url);
 		void add_vote(dpp::user user, int suggestionIDDB);
 		void subtract_vote(dpp::user user, int suggestionIDDB);
+		std::string get_description(int suggestionINDB);
+		std::string get_creator_discord_id(int suggestionINDB);
+		int get_votes(int suggestionINDB);
+		std::string get_message_url(int suggestionINDB);
+		void delete_suggestion(int suggestionINDB);
 
 		// Users
 		void add_user_to_database(std::string userID, std::string discordName, boolean hasVotedUp, boolean hasVotedDown, int suggestionID);
@@ -33,7 +38,7 @@ class Database
 		void update_react_up(sql::SQLString discorduserid, int suggestionDBID);
 		void update_react_down(sql::SQLString discorduserid, int suggestionDBID);
 
-		// Config
+		// Configs
 		void add_config(std::string guild_id, std::string suggest_channel_id, std::string approve_channel_id, std::string role_id);
 		int find_config(std::string guild_id);
 		
@@ -42,5 +47,9 @@ class Database
 		void update_config_suggest_channel_id(std::string suggest_channel_id, int configID);
 		void update_config_approve_channel_id(std::string approve_channel_id, int configID);
 		void update_config_role_id(std::string role_id, int configID);
+
+		std::string get_suggest_channel_id(int configID);
+		std::string get_approve_id(int configID);
+		std::string get_role_id(int configID);
 
 };

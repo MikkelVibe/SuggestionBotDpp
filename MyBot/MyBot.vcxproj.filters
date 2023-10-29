@@ -24,9 +24,6 @@
     <ClCompile Include="Suggestion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VoteUser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Database.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -159,9 +156,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Suggestion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VoteUser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">

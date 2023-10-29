@@ -15,9 +15,5 @@
 #endif
 class MyBot {
 	public:
-		Suggestion suggestionTemp;
-		Suggestion* get_temp_suggestion();
 		MyBot();
-		void create_and_add_to_list(dpp::message message);
-		void set_temp_suggestion(Suggestion* toSet);
 };

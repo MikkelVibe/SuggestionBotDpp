@@ -1,6 +1,5 @@
 #include "Database.h"
 
-
 const std::string server = "tcp://127.0.0.1:3306";
 const std::string username = "root";
 const std::string password = "Gse26fvrGse26fvr%";
@@ -8,10 +7,8 @@ const std::string password = "Gse26fvrGse26fvr%";
 sql::Driver* driver;
 sql::Connection* con;
 sql::Statement* stmt;
-sql::PreparedStatement* pstmt;
-sql::ResultSet* result;
-sql::Statement* stmt;
 
+sql::ResultSet* result;
 
 sql::SQLString convert_string_to_sqlstring(std::string string) {
 	return string.c_str();
@@ -24,8 +21,8 @@ void Database::connect_to_database() {
 	{
 		driver = get_driver_instance();
 		con = driver->connect(server, username, password);
-		std::cout << "Successfully connected to the database " << std::endl;
 		con->setSchema("testdb");
+		std::cout << "Successfully connected to the database " << std::endl;
 	}
 	catch (sql::SQLException e)
 	{
@@ -36,6 +33,8 @@ void Database::connect_to_database() {
 }
 
 int Database::get_max_id_suggestions() {
+	sql::PreparedStatement* pstmt;
+
 	int resultInt = -1;
 
 	pstmt = con->prepareStatement("SELECT MAX(iduser) FROM suggestions;");
@@ -49,7 +48,9 @@ int Database::get_max_id_suggestions() {
 }
 
 void Database::add_suggestion_to_database(std::string url, std::string description, std::string creater_url) {
-	pstmt = con->prepareStatement("INSERT INTO suggestions(id, url, description, creater_discord_id) VALUES(?,?,?,?)");
+	sql::PreparedStatement* pstmt;
+
+	pstmt = con->prepareStatement("INSERT INTO suggestions (id, url, description, creater_discord_id) VALUES(?,?,?,?)");
 
 	pstmt->setInt(1, get_max_id_suggestions()+1);
 	pstmt->setString(2, url);
@@ -61,6 +62,8 @@ void Database::add_suggestion_to_database(std::string url, std::string descripti
 }
 
 int Database::find_suggestion_in_database(std::string url) {
+	sql::PreparedStatement* pstmt;
+
 	int temp = -1;
 
 	pstmt = con->prepareStatement("SELECT * FROM suggestions WHERE url = " + url);
@@ -82,6 +85,8 @@ boolean Database::is_suggestion_in_database(std::string url) {
 }
 
 void Database::add_vote(dpp::user user, int suggestionIDDB) {
+	sql::PreparedStatement* pstmt;
+
 	sql::SQLString userSqlString = convert_string_to_sqlstring(user.id.str());
 
 	if (!is_user_in_suggestion(userSqlString, suggestionIDDB)) {
@@ -114,6 +119,7 @@ void Database::add_vote(dpp::user user, int suggestionIDDB) {
 }
 
 void Database::subtract_vote(dpp::user user, int suggestionIDDB) {
+	sql::PreparedStatement* pstmt;
 
 	sql::SQLString userSqlString = convert_string_to_sqlstring(user.id.str());
 
@@ -146,9 +152,53 @@ void Database::subtract_vote(dpp::user user, int suggestionIDDB) {
 	}
 }
 
+std::string Database::get_description(int suggestionINDB) {
+	sql::PreparedStatement* pstmt;
+
+	pstmt = con->prepareStatement("SELECT * FROM suggestions WHERE id = " + suggestionINDB);
+	result = pstmt->executeQuery();
+
+	return result->getString(3).c_str();
+
+
+}
+std::string Database::get_creator_discord_id(int suggestionINDB) {
+	sql::PreparedStatement* pstmt;
+
+	pstmt = con->prepareStatement("SELECT * FROM suggestions WHERE id = " + suggestionINDB);
+	result = pstmt->executeQuery();
+
+	return result->getString(4).c_str();
+}
+int Database::get_votes(int suggestionINDB) {
+	sql::PreparedStatement* pstmt;
+
+	pstmt = con->prepareStatement("SELECT * FROM suggestions WHERE id = " + suggestionINDB);
+	result = pstmt->executeQuery();
+
+	return result->getInt(5);
+}
+std::string Database::get_message_url(int suggestionINDB) {
+	sql::PreparedStatement* pstmt;
+
+	pstmt = con->prepareStatement("SELECT * FROM suggestions WHERE id = " + suggestionINDB);
+	result = pstmt->executeQuery();
+
+	return result->getString(2).c_str();
+}
+
+void Database::delete_suggestion(int suggestionINDB) {
+	sql::PreparedStatement* pstmt;
+
+	pstmt = con->prepareStatement("DELETE FROM suggestions WHERE id = " + suggestionINDB);
+	result = pstmt->executeQuery();
+}
+
 // USERS
 
 int Database::get_max_id_users() {
+	sql::PreparedStatement* pstmt;
+
 	pstmt = con->prepareStatement("SELECT MAX(iduser) FROM user;");
 	result = pstmt->executeQuery();
 
@@ -156,7 +206,9 @@ int Database::get_max_id_users() {
 }
 
 void Database::add_user_to_database(std::string userID, std::string discordName, boolean hasVotedUp, boolean hasVotedDown, int suggestionIDDB) {
-	pstmt = con->prepareStatement("INSERT INTO user(iduser, discord_id, discord_username, hasVotedUp, hasVotedDown, suggestion_id) VALUES(?, ?, ?, ?, ?, ?)");
+	sql::PreparedStatement* pstmt;
+
+	pstmt = con->prepareStatement("INSERT INTO user (iduser, discord_id, discord_username, hasVotedUp, hasVotedDown, suggestion_id) VALUES(?, ?, ?, ?, ?, ?)");
 
 	pstmt->setInt(1, get_max_id_users()+1);
 	pstmt->setString(2, userID);
@@ -169,6 +221,8 @@ void Database::add_user_to_database(std::string userID, std::string discordName,
 }
 
 std::vector<int> Database::find_users_in_suggestion(int suggestionID) {
+	sql::PreparedStatement* pstmt;
+
 	std::vector<int> returnVector;
 
 	pstmt = con->prepareStatement("SELECT * FROM user WHERE suggestion_id = " + suggestionID);
@@ -181,6 +235,8 @@ std::vector<int> Database::find_users_in_suggestion(int suggestionID) {
 }
 
 int Database::find_user(sql::SQLString discorduserid, int suggestionDBID) {
+	sql::PreparedStatement* pstmt;
+
 	int i = -1;
 
 	pstmt = con->prepareStatement("SELECT * FROM user WHERE discord_id = " + discorduserid);
@@ -202,6 +258,8 @@ boolean Database::is_user_in_suggestion(sql::SQLString discorduserid, int sugges
 }
 
 boolean Database::user_has_vote_up(sql::SQLString discorduserid, int suggestionDBID) {
+	sql::PreparedStatement* pstmt;
+
 	boolean resultBoolean = false;
 	
 	pstmt = con->prepareStatement("SELECT * FROM user WHERE iduser = " + find_user(discorduserid, suggestionDBID));
@@ -217,6 +275,8 @@ boolean Database::user_has_vote_up(sql::SQLString discorduserid, int suggestionD
 }
 
 boolean Database::user_has_vote_down(sql::SQLString discorduserid, int suggestionDBID) {
+	sql::PreparedStatement* pstmt;
+
 	boolean resultBoolean = false;
 
 	pstmt = con->prepareStatement("SELECT * FROM user WHERE iduser = " + find_user(discorduserid, suggestionDBID));
@@ -232,6 +292,8 @@ boolean Database::user_has_vote_down(sql::SQLString discorduserid, int suggestio
 }
 
 void Database::update_react_down(sql::SQLString discorduserid, int suggestionDBID) {
+	sql::PreparedStatement* pstmt;
+
 	if (user_has_vote_down(discorduserid, suggestionDBID)) {
 		pstmt = con->prepareStatement("UPDATE user SET hasVotedDown = true WHERE iduser = " + find_user(discorduserid, suggestionDBID));
 		result = pstmt->executeQuery();
@@ -243,6 +305,8 @@ void Database::update_react_down(sql::SQLString discorduserid, int suggestionDBI
 }
 
 void Database::update_react_up(sql::SQLString discorduserid, int suggestionDBID) {
+	sql::PreparedStatement* pstmt;
+
 	if (user_has_vote_up(discorduserid, suggestionDBID)) {
 		pstmt = con->prepareStatement("UPDATE user SET hasVotedUp = true WHERE iduser = " + find_user(discorduserid, suggestionDBID));
 		result = pstmt->executeQuery();
@@ -257,6 +321,8 @@ void Database::update_react_up(sql::SQLString discorduserid, int suggestionDBID)
 
 
 int get_max_config_id() {
+	sql::PreparedStatement* pstmt;
+
 	int resultInt = -1;
 
 	pstmt = con->prepareStatement("SELECT MAX(id) FROM server_config");
@@ -270,7 +336,9 @@ int get_max_config_id() {
 }
 
 void Database::add_config(std::string guild_id, std::string suggest_channel_id, std::string approve_channel_id, std::string role_id) {
-	pstmt = con->prepareStatement("INSERT INTO server_config(id, guild_id, suggest_channel_id, approve_channel_id, role_id) VALUES(?, ?, ?, ?, ?)");
+	sql::PreparedStatement* pstmt;
+
+	pstmt = con->prepareStatement("INSERT INTO server_config (id, guild_id, suggest_channel_id, approve_channel_id, role_id) VALUES(?, ?, ?, ?, ?)");
 
 	pstmt->setInt(1, get_max_config_id() + 1);
 	pstmt->setString(2, guild_id);
@@ -278,11 +346,13 @@ void Database::add_config(std::string guild_id, std::string suggest_channel_id, 
 	pstmt->setString(4, approve_channel_id);
 	pstmt->setString(5, role_id);
 
-	pstmt->execute();
+	pstmt->executeUpdate();
 }
 
 
 int Database::find_config(std::string guild_id) {
+	sql::PreparedStatement* pstmt;
+
 	int i = -1;
 
 	pstmt = con->prepareStatement("SELECT * FROM server_config WHERE guild_id = (?)");
@@ -298,6 +368,8 @@ int Database::find_config(std::string guild_id) {
 }
 
 std::vector<int> Database::different_value_locations(std::string guild_id, std::string suggest_channel_id, std::string approve_channel_id, std::string role_id) {
+	sql::PreparedStatement* pstmt;
+
 	std::vector<int> returnVector;
 
 	pstmt = con->prepareStatement("SELECT * FROM server_config WHERE guild_id = (?)");
@@ -316,6 +388,8 @@ std::vector<int> Database::different_value_locations(std::string guild_id, std::
 }
 
 void Database::update_config_suggest_channel_id(std::string suggest_channel_id, int configID) {
+	sql::PreparedStatement* pstmt;
+
 	pstmt = con->prepareStatement("UPDATE server_config SET suggest_channel_id = (?) WHERE guild_id = (?)");
 	pstmt->setString(1, suggest_channel_id);
 	pstmt->setInt(2, configID);
@@ -324,6 +398,8 @@ void Database::update_config_suggest_channel_id(std::string suggest_channel_id, 
 }
 
 void Database::update_config_approve_channel_id(std::string approve_channel_id, int configID) {
+	sql::PreparedStatement* pstmt;
+
 	pstmt = con->prepareStatement("UPDATE server_config SET approve_channel_id = (?) WHERE guild_id = (?)");
 	pstmt->setString(1, approve_channel_id);
 	pstmt->setInt(2, configID);
@@ -332,9 +408,36 @@ void Database::update_config_approve_channel_id(std::string approve_channel_id, 
 }
 
 void Database::update_config_role_id(std::string role_id, int configID) {
+	sql::PreparedStatement* pstmt;
+
 	pstmt = con->prepareStatement("UPDATE server_config SET role_id = (?) WHERE guild_id = (?)");
 	pstmt->setString(1, role_id);
 	pstmt->setInt(2, configID);
 
 	result = pstmt->executeQuery();
+}
+
+std::string Database::get_suggest_channel_id(int configID) {
+	sql::PreparedStatement* pstmt;
+
+	pstmt = con->prepareStatement("SELECT * FROM server_config WHERE id = " + configID);
+	result = pstmt->executeQuery();
+
+	return result->getString(3).c_str();
+}
+std::string Database::get_approve_id(int configID) {
+	sql::PreparedStatement* pstmt;
+
+	pstmt = con->prepareStatement("SELECT * FROM server_config WHERE id = " + configID);
+	result = pstmt->executeQuery();
+
+	return result->getString(4).c_str();
+}
+std::string Database::get_role_id(int configID) {
+	sql::PreparedStatement* pstmt;
+
+	pstmt = con->prepareStatement("SELECT * FROM server_config WHERE id = " + configID);
+	result = pstmt->executeQuery();
+
+	return result->getString(5).c_str();
 }
