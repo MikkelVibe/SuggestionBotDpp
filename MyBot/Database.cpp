@@ -2,7 +2,7 @@
 
 const std::string server = "tcp://127.0.0.1:3306";
 const std::string username = "root";
-const std::string password = "Gse26fvrGse26fvr%";
+std::string password;
 
 sql::Driver* driver;
 sql::Connection* con;
@@ -17,6 +17,22 @@ sql::SQLString convert_string_to_sqlstring(std::string string) {
 // SUGGESTIONS
 
 void Database::connect_to_database() {
+	std::string filename = "C:\\Users\\Mikkel\\Documents\\GitHub\\SuggestionBotDpp\\password.txt";
+	std::string file_contents;
+
+	std::ifstream file(filename);
+
+	if (file.is_open()) {
+		std::getline(file, file_contents);
+		file.close();
+
+		// Now, 'file_contents' contains the content of the file.
+	}
+	else {
+		std::cerr << "Error: Unable to open the file." << std::endl;
+	}
+	password = file_contents;
+
 	try
 	{
 		driver = get_driver_instance();

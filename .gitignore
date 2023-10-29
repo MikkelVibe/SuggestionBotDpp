@@ -12,6 +12,8 @@ MyBot/Release
 *.user
 *.userosscache
 *.sln.docstates
+token.txt
+password.txt
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

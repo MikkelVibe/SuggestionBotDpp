@@ -3,7 +3,8 @@
 #include "Suggestion.h"
 #include "Database.h"
 
-const std::string BOT_TOKEN = "MTE2NTY2NTMwNzAxNzM2NzU2Mg.GHh1O-.HSMgzmBEOyTZABlKkNKI5sguhA2IlIm2tBei4w";
+std::string BOT_TOKEN;
+
 
 std::vector<dpp::snowflake> roles;
 
@@ -40,6 +41,23 @@ boolean has_role(dpp::guild_member guildMember, int configID) {
 
 int main()
 {
+	std::string filename = "C:\\Users\\Mikkel\\Documents\\GitHub\\SuggestionBotDpp\\token.txt";
+	std::string file_contents;
+
+	std::ifstream file(filename);
+
+	if (file.is_open()) {
+		std::getline(file, file_contents);
+		file.close();
+
+		// Now, 'file_contents' contains the content of the file.
+	}
+	else {
+		std::cerr << "Error: Unable to open the file." << std::endl;
+	}
+
+	BOT_TOKEN = file_contents;
+
 	// Connect to database
 
 	database.connect_to_database();
