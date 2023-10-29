@@ -132,7 +132,6 @@ void Database::add_vote(dpp::user user, int suggestionIDDB) {
 
 		int currentVotes;
 		if (result->next()) {
-			// Retrieve the string from the result and save it in a variable
 			currentVotes = result->getInt(1) + 1; 
 		}
 
@@ -144,7 +143,6 @@ void Database::add_vote(dpp::user user, int suggestionIDDB) {
 	else {
 		int currentVotes;
 		if (result->next()) {
-			// Retrieve the string from the result and save it in a variable
 			currentVotes = result->getInt(1) - 1;
 		}
 
@@ -169,20 +167,20 @@ void Database::subtract_vote(dpp::user user, int suggestionIDDB) {
 	if (!user_has_vote_down(userSqlString, suggestionIDDB)) {
 		update_react_down(userSqlString, suggestionIDDB);
 
-		pstmt = con->prepareStatement("SELECT * FROM suggestions WHERE id = " + suggestionIDDB);
+		pstmt = con->prepareStatement("SELECT votes FROM suggestions WHERE id = ?");
 		result = pstmt->executeQuery();
 
-		int currentVotes = result->getInt(5) -1;
+		int currentVotes = result->getInt(1) -1;
 
-		pstmt = con->prepareStatement("UPDATE suggestion SET votes = ? WHERE id = ?");
+		pstmt = con->prepareStatement("UPDATE suggestions SET votes = ? WHERE id = ?");
 		pstmt->setInt(1, currentVotes);
 		pstmt->setInt(2, suggestionIDDB);
 		result = pstmt->executeQuery(); 
 	}
 	else {
-		int currentVotes = result->getInt(5) + 1;
+		int currentVotes = result->getInt(1) + 1;
 
-		pstmt = con->prepareStatement("UPDATE suggestion SET votes = ? WHERE id = ?");
+		pstmt = con->prepareStatement("UPDATE suggestions SET votes = ? WHERE id = ?");
 		pstmt->setInt(1, currentVotes);
 		pstmt->setInt(2, suggestionIDDB);
 		result = pstmt->executeQuery();
@@ -200,7 +198,6 @@ std::string Database::get_description(int suggestionINDB) {
 
 	std::string description;
 	if (result->next()) {
-		// Retrieve the string from the result and save it in a variable
 		description = result->getString(1);
 	}
 	return description;
@@ -214,7 +211,6 @@ std::string Database::get_creator_discord_id(int suggestionINDB) {
 
 	std::string creatorid;
 	if (result->next()) {
-		// Retrieve the string from the result and save it in a variable
 		creatorid = result->getString(1);
 	}
 	return creatorid;
@@ -228,7 +224,6 @@ int Database::get_votes(int suggestionINDB) {
 
 	int votes;
 	if (result->next()) {
-		// Retrieve the string from the result and save it in a variable
 		votes = result->getInt(1);
 	}
 	return votes;
@@ -242,7 +237,6 @@ std::string Database::get_message_url(int suggestionINDB) {
 
 	std::string messageurl;
 	if (result->next()) {
-		// Retrieve the string from the result and save it in a variable
 		messageurl = result->getString(1);
 	}
 	return messageurl;
@@ -365,12 +359,12 @@ void Database::update_react_down(sql::SQLString discorduserid, int suggestionDBI
 	sql::PreparedStatement* pstmt;
 
 	if (user_has_vote_down(discorduserid, suggestionDBID)) {
-		pstmt = con->prepareStatement("UPDATE user SET hasVotedDown = true WHERE iduser = ?");
+		pstmt = con->prepareStatement("UPDATE user SET hasVotedDown = false WHERE iduser = ?");
 		pstmt->setInt(1, find_user(discorduserid, suggestionDBID));
 		result = pstmt->executeQuery();
 	}
 	else {
-		pstmt = con->prepareStatement("UPDATE user SET hasVotedDown = false WHERE iduser = ?");
+		pstmt = con->prepareStatement("UPDATE user SET hasVotedDown = true WHERE iduser = ?");
 		pstmt->setInt(1, find_user(discorduserid, suggestionDBID));
 		result = pstmt->executeQuery();
 	}
@@ -380,12 +374,12 @@ void Database::update_react_up(sql::SQLString discorduserid, int suggestionDBID)
 	sql::PreparedStatement* pstmt;
 
 	if (user_has_vote_up(discorduserid, suggestionDBID)) {
-		pstmt = con->prepareStatement("UPDATE user SET hasVotedUp = true WHERE iduser = ?");
+		pstmt = con->prepareStatement("UPDATE user SET hasVotedUp = false WHERE iduser = ?");
 		pstmt->setInt(1, find_user(discorduserid, suggestionDBID));
 		result = pstmt->executeQuery();
 	}
 	else {
-		pstmt = con->prepareStatement("UPDATE user SET hasVotedUp = false WHERE iduser = ?");
+		pstmt = con->prepareStatement("UPDATE user SET hasVotedUp = true WHERE iduser = ?");
 		pstmt->setInt(1, find_user(discorduserid, suggestionDBID));
 		result = pstmt->executeQuery();
 	}

@@ -15,13 +15,13 @@ Suggestion *Suggestion::get_instance() {
 }
 
 
-dpp::message Suggestion::create_message(std::string description, dpp::user creator, dpp::snowflake channelid, int votes) {
+dpp::message Suggestion::create_message(std::string description, std::string formatted_username, dpp::snowflake channelid, int votes) {
     dpp::embed embed = dpp::embed()
         .set_color(dpp::colors::sti_blue)
         .set_description("A new suggestion has been submitted! React below to vote.")
         .add_field(
             "Submitter",
-            creator.format_username()
+            formatted_username
         )
         .add_field(
             "Suggestion",

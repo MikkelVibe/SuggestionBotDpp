@@ -14,9 +14,24 @@ Database database;
 
 int guildid;
 
+dpp::message getMessage;
+
 MyBot::MyBot() {
 
 }
+
+void set_message(dpp::message toSet, dpp::message newMessage) {
+	newMessage.set_channel_id(toSet.channel_id);
+	newMessage.set_guild_id(toSet.guild_id);
+	newMessage.id = toSet.id;
+
+	getMessage = newMessage;
+}
+
+dpp::message get_message() {
+	return getMessage;
+}
+
 
 int get_temp_guild_id() {
 	return guildid;
@@ -67,8 +82,6 @@ int main()
 	if (file.is_open()) {
 		std::getline(file, file_contents);
 		file.close();
-
-		// Now, 'file_contents' contains the content of the file.
 	}
 	else {
 		std::cerr << "Error: Unable to open the file." << std::endl;
@@ -85,16 +98,16 @@ int main()
 		if (database.find_config(event.command.get_guild().id.str()) != -1) {
 			if (event.command.get_command_name() == "suggest") {
 				std::string suggestionString = std::get<std::string>(event.get_parameter("suggestion"));
-				dpp::user userInQuestion = event.command.get_issuing_user();
+				dpp::user user = event.command.get_issuing_user();
 
 				set_temp_guild_id(database.find_config(event.command.get_guild().id.str()));
-
-				bot.message_create(Suggestion::create_message(suggestionString, userInQuestion, database.get_suggest_channel_id(get_temp_guild_id()), 0), [&bot, &suggestionString, &userInQuestion](const dpp::confirmation_callback_t& callback) {
+				
+				bot.message_create(Suggestion::create_message(suggestionString, user.format_username(), database.get_suggest_channel_id(get_temp_guild_id()), 0), [&suggestionString, &user](const dpp::confirmation_callback_t& callback) {
 					if (callback.is_error()) {
 						std::cout << callback.get_error().message << std::endl;
 					}
 					else {
-						add_suggestion(callback.get<dpp::message>().get_url(), suggestionString, userInQuestion.get_url(), get_temp_guild_id());
+						add_suggestion(callback.get<dpp::message>().get_url(), suggestionString, user.id.str(), get_temp_guild_id());
 					}
 				});
 				event.reply(dpp::message("Suggestion created in: " + get_channel_url(database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())), event.command.get_guild().id.str())).set_flags(dpp::m_ephemeral));
@@ -177,17 +190,20 @@ int main()
 
 		int suggestionID = database.find_suggestion_in_database(urlOfEvent);
 		
-		dpp::user user = event.command.get_issuing_user();
+		dpp::user userIssuing = event.command.get_issuing_user();
 
-		sql::SQLString userClick = user.id.str().c_str();
+		sql::SQLString userClick = userIssuing.id.str().c_str();
 
 		dpp::message mess = nullptr;
 
+		std::string description = database.get_description(suggestionID);
+		dpp::user* user = dpp::find_user(dpp::snowflake(database.get_creator_discord_id(suggestionID)));
+		dpp::channel* channel_id = dpp::find_channel(database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())));
+
 		if (eventID == "upvote") {
 
-			database.add_vote(user, suggestionID);
+			database.add_vote(userIssuing, suggestionID);
 
-			
 			if (!database.user_has_vote_up(userClick, suggestionID)) {
 				mess = dpp::message("Vote confirmed");
 			}
@@ -195,21 +211,27 @@ int main()
 				mess = dpp::message("Vote removed");
 			}
 
-			std::string description = database.get_description(suggestionID);
-			dpp::user* user = dpp::find_user(database.get_creator_discord_id(suggestionID));
-			dpp::channel* channel_id = dpp::find_channel(database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())));
-			
-			std::cout << description << user->format_username() << channel_id->id.str();
+			dpp::message newMessage = Suggestion::create_message(description, user->format_username(), channel_id->id.str(), database.get_votes(suggestionID));
 
-			dpp::message newMessage = Suggestion::create_message(description, *user, channel_id->id.str(), suggestionID);
+			dpp::snowflake messageid = dpp::snowflake(database.get_message_url(suggestionID).substr(68, 19));
 
-			bot.message_edit(newMessage);
+			dpp::snowflake channelid = dpp::snowflake(database.get_message_url(suggestionID).substr(48, 19));
 
+			bot.message_get(messageid, channelid, [&bot, &newMessage](const dpp::confirmation_callback_t& callback) {
+				if (callback.is_error()) {
+					std::cout << callback.get_error().message << std::endl;
+				}
+				else {
+					set_message(callback.get<dpp::message>(), newMessage);
+
+					bot.message_edit(get_message());
+				}
+			});
 			event.reply(mess.set_flags(dpp::m_ephemeral));
 		}
 		else if (eventID == "downvote") {
 
-			database.subtract_vote(user, suggestionID);
+			database.subtract_vote(userIssuing, suggestionID);
 
 			if (!database.user_has_vote_down(userClick, suggestionID)) {
 				mess = dpp::message("Vote confirmed");
@@ -218,14 +240,22 @@ int main()
 				mess = dpp::message("Vote removed");
 			}
 
-			std::string description = database.get_description(suggestionID);
-			dpp::user* user = dpp::find_user(database.get_creator_discord_id(suggestionID));
-			dpp::channel* channel_id = dpp::find_channel(database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())));
+			dpp::message newMessage = Suggestion::create_message(description, user->format_username(), channel_id->id.str(), database.get_votes(suggestionID));
 
-			dpp::message newMessage = Suggestion::create_message(description, *user, channel_id->id.str(), suggestionID);
+			dpp::snowflake messageid = dpp::snowflake(database.get_message_url(suggestionID).substr(68, 19));
 
-			bot.message_edit(newMessage);
+			dpp::snowflake channelid = dpp::snowflake(database.get_message_url(suggestionID).substr(48, 19));
 
+			bot.message_get(messageid, channelid, [&bot, &newMessage](const dpp::confirmation_callback_t& callback) {
+				if (callback.is_error()) {
+					std::cout << callback.get_error().message << std::endl;
+				}
+				else {
+					set_message(callback.get<dpp::message>(), newMessage);
+
+					bot.message_edit(get_message());
+				}
+			});
 			event.reply(mess.set_flags(dpp::m_ephemeral));
 		}
 		else if (eventID == "approve") {
@@ -253,7 +283,6 @@ int main()
 			}
 			event.reply(mess.set_flags(dpp::m_ephemeral));
 		}
-		
     });
 
 	bot.on_ready([&bot](const dpp::ready_t& event) {
