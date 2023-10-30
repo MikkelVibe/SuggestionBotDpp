@@ -123,6 +123,10 @@ void Database::add_vote(dpp::user user, int suggestionIDDB) {
 		add_user_to_database(user.id.str(), user.format_username(), false, false, suggestionIDDB);
 	}
 
+	if (user_has_vote_down(userSqlString, suggestionIDDB)) {
+		subtract_vote(user, suggestionIDDB);
+	}
+
 	if (!user_has_vote_up(userSqlString, suggestionIDDB)) {
 		update_react_up(userSqlString, suggestionIDDB);
 
@@ -130,20 +134,26 @@ void Database::add_vote(dpp::user user, int suggestionIDDB) {
 		pstmt->setInt(1, suggestionIDDB);
 		result = pstmt->executeQuery();
 
-		int currentVotes;
+		int currentVotes = 0;
 		if (result->next()) {
-			currentVotes = result->getInt(1) + 1; 
+			currentVotes = result->getInt(1); 
+			currentVotes++;
 		}
 
 		pstmt = con->prepareStatement("UPDATE suggestions SET votes = ? WHERE id = ?");
 		pstmt->setInt(1, currentVotes);
 		pstmt->setInt(2, suggestionIDDB);
-		result = pstmt->executeQuery();
+		pstmt->executeQuery();
 	}
 	else {
-		int currentVotes;
+		int currentVotes = 0;
+		pstmt = con->prepareStatement("SELECT votes FROM suggestions WHERE id = ?");
+		pstmt->setInt(1, suggestionIDDB);
+		result = pstmt->executeQuery();
+
 		if (result->next()) {
-			currentVotes = result->getInt(1) - 1;
+			currentVotes = result->getInt(1);
+			currentVotes--;
 		}
 
 		pstmt = con->prepareStatement("UPDATE suggestions SET votes = ? WHERE id = ?");
@@ -151,7 +161,7 @@ void Database::add_vote(dpp::user user, int suggestionIDDB) {
 		pstmt->setInt(2, suggestionIDDB);
 		result = pstmt->executeQuery();
 
-		update_react_down(userSqlString, suggestionIDDB);
+		update_react_up(userSqlString, suggestionIDDB);
 	}
 }
 
@@ -159,6 +169,10 @@ void Database::subtract_vote(dpp::user user, int suggestionIDDB) {
 	sql::PreparedStatement* pstmt;
 
 	sql::SQLString userSqlString = convert_string_to_sqlstring(user.id.str());
+
+	if (user_has_vote_up(userSqlString, suggestionIDDB)) {
+		add_vote(user, suggestionIDDB);
+	}
 
 	if (!is_user_in_suggestion(userSqlString, suggestionIDDB)) {
 		add_user_to_database(user.id.str(), user.format_username(), false, false, suggestionIDDB);
@@ -168,9 +182,14 @@ void Database::subtract_vote(dpp::user user, int suggestionIDDB) {
 		update_react_down(userSqlString, suggestionIDDB);
 
 		pstmt = con->prepareStatement("SELECT votes FROM suggestions WHERE id = ?");
+		pstmt->setInt(1, suggestionIDDB);
 		result = pstmt->executeQuery();
 
-		int currentVotes = result->getInt(1) -1;
+		int currentVotes = 0;
+		if (result->next()) {
+			currentVotes = result->getInt(1);
+			currentVotes--;
+		}
 
 		pstmt = con->prepareStatement("UPDATE suggestions SET votes = ? WHERE id = ?");
 		pstmt->setInt(1, currentVotes);
@@ -178,7 +197,16 @@ void Database::subtract_vote(dpp::user user, int suggestionIDDB) {
 		result = pstmt->executeQuery(); 
 	}
 	else {
-		int currentVotes = result->getInt(1) + 1;
+
+		pstmt = con->prepareStatement("SELECT votes FROM suggestions WHERE id = ?");
+		pstmt->setInt(1, suggestionIDDB);
+		result = pstmt->executeQuery();
+
+		int currentVotes = 0;
+		if (result->next()) {
+			currentVotes = result->getInt(1);
+			currentVotes++;
+		}
 
 		pstmt = con->prepareStatement("UPDATE suggestions SET votes = ? WHERE id = ?");
 		pstmt->setInt(1, currentVotes);
@@ -287,7 +315,7 @@ std::vector<int> Database::find_users_in_suggestion(int suggestionID) {
 
 	std::vector<int> returnVector;
 
-	pstmt = con->prepareStatement("SELECT * FROM user WHERE suggestion_id = ?");
+	pstmt = con->prepareStatement("SELECT iduser FROM user WHERE suggestion_id = ?");
 	pstmt->setInt(1, suggestionID);
 	result = pstmt->executeQuery();
 
@@ -302,8 +330,9 @@ int Database::find_user(sql::SQLString discorduserid, int suggestionDBID) {
 
 	int i = -1;
 
-	pstmt = con->prepareStatement("SELECT * FROM user WHERE discord_id = ?");
+	pstmt = con->prepareStatement("SELECT iduser FROM user WHERE discord_id = ? AND suggestion_id = ?");
 	pstmt->setString(1, discorduserid);
+	pstmt->setInt(2, suggestionDBID);
 	result = pstmt->executeQuery();
 
 	if (result->next()) {
@@ -326,15 +355,12 @@ boolean Database::user_has_vote_up(sql::SQLString discorduserid, int suggestionD
 
 	pstmt = con->prepareStatement("SELECT hasVotedUp FROM user WHERE iduser = ?");
 	pstmt->setInt(1, find_user(discorduserid, suggestionDBID));
-	
 	result = pstmt->executeQuery();
 
-	boolean resultBool;
+	boolean resultBool = false;
 	if (result->next()) {
-		// Retrieve the string from the result and save it in a variable
 		resultBool = result->getBoolean(1);
 	}
-
 	return resultBool;
 }
 
@@ -346,7 +372,7 @@ boolean Database::user_has_vote_down(sql::SQLString discorduserid, int suggestio
 
 	result = pstmt->executeQuery();
 
-	boolean resultBool;
+	boolean resultBool = false;
 	if (result->next()) {
 		// Retrieve the string from the result and save it in a variable
 		resultBool = result->getBoolean(1);

@@ -20,12 +20,8 @@ MyBot::MyBot() {
 
 }
 
-void set_message(dpp::message toSet, dpp::message newMessage) {
-	newMessage.set_channel_id(toSet.channel_id);
-	newMessage.set_guild_id(toSet.guild_id);
-	newMessage.id = toSet.id;
-
-	getMessage = newMessage;
+void set_message(dpp::message toSet) {
+	getMessage = toSet;
 }
 
 dpp::message get_message() {
@@ -201,59 +197,57 @@ int main()
 		dpp::channel* channel_id = dpp::find_channel(database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())));
 
 		if (eventID == "upvote") {
-
 			database.add_vote(userIssuing, suggestionID);
 
-			if (!database.user_has_vote_up(userClick, suggestionID)) {
+			if (database.user_has_vote_up(userClick, suggestionID)) {
 				mess = dpp::message("Vote confirmed");
 			}
 			else {
 				mess = dpp::message("Vote removed");
 			}
-
-			dpp::message newMessage = Suggestion::create_message(description, user->format_username(), channel_id->id.str(), database.get_votes(suggestionID));
-
+			set_message(Suggestion::create_message(description, user->format_username(), channel_id->id.str(), database.get_votes(suggestionID)));
 			dpp::snowflake messageid = dpp::snowflake(database.get_message_url(suggestionID).substr(68, 19));
-
 			dpp::snowflake channelid = dpp::snowflake(database.get_message_url(suggestionID).substr(48, 19));
 
-			bot.message_get(messageid, channelid, [&bot, &newMessage](const dpp::confirmation_callback_t& callback) {
+			bot.message_get(messageid, channelid, [&bot](const dpp::confirmation_callback_t& callback) {
 				if (callback.is_error()) {
-					std::cout << callback.get_error().message << std::endl;
+					std::cout << callback.get_error().message << "<--- error callback" << std::endl;
 				}
 				else {
-					set_message(callback.get<dpp::message>(), newMessage);
+					dpp::message newMessage = get_message();
+					dpp::message msg = callback.get<dpp::message>();
+					newMessage.set_channel_id(msg.channel_id);
+					newMessage.id = msg.id;
 
-					bot.message_edit(get_message());
+					bot.message_edit(newMessage);
 				}
 			});
 			event.reply(mess.set_flags(dpp::m_ephemeral));
 		}
 		else if (eventID == "downvote") {
-
 			database.subtract_vote(userIssuing, suggestionID);
 
-			if (!database.user_has_vote_down(userClick, suggestionID)) {
+			if (database.user_has_vote_down(userClick, suggestionID)) {
 				mess = dpp::message("Vote confirmed");
 			}
 			else {
 				mess = dpp::message("Vote removed");
 			}
-
-			dpp::message newMessage = Suggestion::create_message(description, user->format_username(), channel_id->id.str(), database.get_votes(suggestionID));
-
+			set_message(Suggestion::create_message(description, user->format_username(), channel_id->id.str(), database.get_votes(suggestionID)));
 			dpp::snowflake messageid = dpp::snowflake(database.get_message_url(suggestionID).substr(68, 19));
-
 			dpp::snowflake channelid = dpp::snowflake(database.get_message_url(suggestionID).substr(48, 19));
 
-			bot.message_get(messageid, channelid, [&bot, &newMessage](const dpp::confirmation_callback_t& callback) {
+			bot.message_get(messageid, channelid, [&bot](const dpp::confirmation_callback_t& callback) {
 				if (callback.is_error()) {
-					std::cout << callback.get_error().message << std::endl;
+					std::cout << callback.get_error().message << "<--- error callback" << std::endl;
 				}
 				else {
-					set_message(callback.get<dpp::message>(), newMessage);
+					dpp::message newMessage = get_message();
+					dpp::message msg = callback.get<dpp::message>();
+					newMessage.set_channel_id(msg.channel_id);
+					newMessage.id = msg.id;
 
-					bot.message_edit(get_message());
+					bot.message_edit(newMessage);
 				}
 			});
 			event.reply(mess.set_flags(dpp::m_ephemeral));
