@@ -193,7 +193,7 @@ int main()
 		std::string description = database.get_description(suggestionID);
 		dpp::user* user = dpp::find_user(dpp::snowflake(database.get_creator_discord_id(suggestionID)));
 		dpp::channel* channel_id = dpp::find_channel(database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())));
-
+		
 		if (eventID == "upvote") {
 			database.add_vote(userIssuing, suggestionID);
 
@@ -234,7 +234,7 @@ int main()
 			set_message(Suggestion::create_message(description, user->format_username(), channel_id->id.str(), database.get_votes(suggestionID)));
 			dpp::snowflake messageid = dpp::snowflake(database.get_message_url(suggestionID).substr(68, 19));
 			dpp::snowflake channelid = dpp::snowflake(database.get_message_url(suggestionID).substr(48, 19));
-
+			
 			bot.message_get(messageid, channelid, [&bot](const dpp::confirmation_callback_t& callback) {
 				if (callback.is_error()) {
 					std::cout << callback.get_error().message << "<--- error callback" << std::endl;
