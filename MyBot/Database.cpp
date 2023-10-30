@@ -248,7 +248,7 @@ int Database::get_votes(int suggestionINDB) {
 	pstmt->setInt(1, suggestionINDB);
 	result = pstmt->executeQuery();
 
-	int votes;
+	int votes = 0;
 	if (result->next()) {
 		votes = result->getInt(1);
 	}
@@ -454,7 +454,6 @@ int Database::find_config(std::string guild_id) {
 	if (result->next()) {
 		i = result->getInt(1);
 	}
-
 	return i;
 }
 

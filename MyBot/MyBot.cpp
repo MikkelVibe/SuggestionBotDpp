@@ -97,7 +97,7 @@ int main()
 				dpp::user user = event.command.get_issuing_user();
 
 				set_temp_guild_id(database.find_config(event.command.get_guild().id.str()));
-				
+
 				bot.message_create(Suggestion::create_message(suggestionString, user.format_username(), database.get_suggest_channel_id(get_temp_guild_id()), 0), [&suggestionString, &user](const dpp::confirmation_callback_t& callback) {
 					if (callback.is_error()) {
 						std::cout << callback.get_error().message << std::endl;
@@ -105,11 +105,11 @@ int main()
 					else {
 						add_suggestion(callback.get<dpp::message>().get_url(), suggestionString, user.id.str(), get_temp_guild_id());
 					}
-				});
+					});
 				event.reply(dpp::message("Suggestion created in: " + get_channel_url(database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())), event.command.get_guild().id.str())).set_flags(dpp::m_ephemeral));
 			}
 		}
-		if (event.command.get_command_name() == "config") {
+		else if (event.command.get_command_name() == "config") {
 			dpp::snowflake rolePermission = std::get<dpp::snowflake>(event.get_parameter("role"));
 			dpp::snowflake suggestionChannel = std::get<dpp::snowflake>(event.get_parameter("suggestionchannel"));
 			dpp::snowflake approveChannel = std::get<dpp::snowflake>(event.get_parameter("approvechannel"));
@@ -123,8 +123,6 @@ int main()
 				description = "Created config with";
 			}
 			else {
-				
-
 				std::vector<int> locations = database.different_value_locations(guildId, suggestionChannel.str(), approveChannel.str(), rolePermission.str());
 
 				int configDBID = database.find_config(guildId);
@@ -142,7 +140,6 @@ int main()
 				}
 				description = "Updated config to";
 			}
-
 			dpp::embed embed = dpp::embed()
 				.set_color(dpp::colors::sti_blue)
 				.set_description(description)
@@ -167,7 +164,7 @@ int main()
 			dpp::message message = dpp::message(event.command.channel_id, embed);
 			event.reply((message).set_flags(dpp::m_ephemeral));
 		}
-		else {
+		else if(database.find_config(event.command.get_guild().id.str()) == -1) {
 			dpp::message message = dpp::message("Please configure the bot before creating suggestions. Use /config to configure the bot.");
 			event.reply((message).set_flags(dpp::m_ephemeral));
 		}
@@ -180,10 +177,9 @@ int main()
 		std::string urlOfEvent = event.command.msg.get_url();
 
 		if (!database.is_suggestion_in_database(urlOfEvent)) {
-			event.reply("Error: suggestion not in database");
+			event.reply(dpp::message("Error: suggestion not in database").set_flags(dpp::m_ephemeral));
 			return;
 		}
-
 		std::string eventID = event.custom_id;
 
 		int suggestionID = database.find_suggestion_in_database(urlOfEvent);
