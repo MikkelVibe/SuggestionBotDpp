@@ -36,8 +36,6 @@ void Database::connect_to_database() {
 	if (file.is_open()) {
 		std::getline(file, file_contents);
 		file.close();
-
-		// Now, 'file_contents' contains the content of the file.
 	}
 	else {
 		std::cerr << "Error: Unable to open the file." << std::endl;
@@ -465,25 +463,29 @@ std::vector<int> Database::different_value_locations(std::string guild_id, std::
 
 	std::vector<int> returnVector;
 
-	pstmt = con->prepareStatement("SELECT * FROM server_config WHERE guild_id = (?)");
+	pstmt = con->prepareStatement("SELECT suggest_channel_id, approve_channel_id, role_id FROM testdb.server_config WHERE guild_id = ?");
 	pstmt->setString(1, guild_id);
 	result = pstmt->executeQuery();
 
-	if (result->getString(2) == convert_string_to_sqlstring(suggest_channel_id)) {
-		returnVector.push_back(2);
+	while (result->next()) {
+		if (result->getString(1).asStdString()._Equal(suggest_channel_id)) {
+			returnVector.push_back(1);
+		}
+		if (result->getString(2).asStdString()._Equal(approve_channel_id)) {
+			returnVector.push_back(2);
+		}
+		if (result->getString(3).asStdString()._Equal(role_id)) {
+			returnVector.push_back(3);
+		}
 	}
-	if (result->getString(3) == convert_string_to_sqlstring(approve_channel_id)) {
-		returnVector.push_back(3);
-	}
-	if (result->getString(4) == convert_string_to_sqlstring(role_id)) {
-		returnVector.push_back(4);
-	}
+	
+	return returnVector;
 }
 
 void Database::update_config_suggest_channel_id(std::string suggest_channel_id, int configID) {
 	sql::PreparedStatement* pstmt;
 
-	pstmt = con->prepareStatement("UPDATE server_config SET suggest_channel_id = (?) WHERE guild_id = (?)");
+	pstmt = con->prepareStatement("UPDATE server_config SET suggest_channel_id = ? WHERE guild_id = ?");
 	pstmt->setString(1, suggest_channel_id);
 	pstmt->setInt(2, configID);
 
@@ -493,7 +495,7 @@ void Database::update_config_suggest_channel_id(std::string suggest_channel_id, 
 void Database::update_config_approve_channel_id(std::string approve_channel_id, int configID) {
 	sql::PreparedStatement* pstmt;
 
-	pstmt = con->prepareStatement("UPDATE server_config SET approve_channel_id = (?) WHERE guild_id = (?)");
+	pstmt = con->prepareStatement("UPDATE server_config SET approve_channel_id = ? WHERE guild_id = ?");
 	pstmt->setString(1, approve_channel_id);
 	pstmt->setInt(2, configID);
 
@@ -530,7 +532,7 @@ std::string Database::get_suggest_channel_id(int configID) {
 std::string Database::get_approve_id(int configID) {
 	sql::PreparedStatement* pstmt;
 
-	pstmt = con->prepareStatement("SELECT approve_channel_id FROM server_config WHERE id = (?)");
+	pstmt = con->prepareStatement("SELECT approve_channel_id FROM server_config WHERE id = ?");
 	pstmt->setInt(1, configID);
 	result = pstmt->executeQuery();
 
@@ -547,7 +549,7 @@ std::string Database::get_approve_id(int configID) {
 std::string Database::get_role_id(int configID) {
 	sql::PreparedStatement* pstmt;
 
-	pstmt = con->prepareStatement("SELECT role_id FROM server_config WHERE id = (?)");
+	pstmt = con->prepareStatement("SELECT role_id FROM server_config WHERE id = ?");
 	pstmt->setInt(1, configID);
 	result = pstmt->executeQuery();
 

@@ -109,7 +109,7 @@ int main()
 				event.reply(dpp::message("Suggestion created in: " + get_channel_url(database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())), event.command.get_guild().id.str())).set_flags(dpp::m_ephemeral));
 			}
 		}
-		else if (event.command.get_command_name() == "config") {
+		if (event.command.get_command_name() == "config") {
 			dpp::snowflake rolePermission = std::get<dpp::snowflake>(event.get_parameter("role"));
 			dpp::snowflake suggestionChannel = std::get<dpp::snowflake>(event.get_parameter("suggestionchannel"));
 			dpp::snowflake approveChannel = std::get<dpp::snowflake>(event.get_parameter("approvechannel"));
@@ -123,6 +123,8 @@ int main()
 				description = "Created config with";
 			}
 			else {
+				
+
 				std::vector<int> locations = database.different_value_locations(guildId, suggestionChannel.str(), approveChannel.str(), rolePermission.str());
 
 				int configDBID = database.find_config(guildId);
