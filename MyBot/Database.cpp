@@ -92,7 +92,7 @@ int Database::find_suggestion_in_database(std::string url) {
 	sql::PreparedStatement* pstmt;
 
 	int temp = -1;
-
+	// FIX THIS * IS NO NO
 	pstmt = con->prepareStatement("SELECT * FROM suggestions WHERE url = ?");
 	pstmt->setString(1, url);
 	result = pstmt->executeQuery();
