@@ -98,16 +98,16 @@ int main()
 		if (database.find_config(event.command.get_guild().id.str()) != -1) {
 			if (event.command.get_command_name() == "suggest") {
 				std::string suggestionString = std::get<std::string>(event.get_parameter("suggestion"));
-				dpp::user user = event.command.get_issuing_user();
+				std::string user = get_user_url(event.command.get_issuing_user().id.str());
 
 				set_temp_guild_id(database.find_config(event.command.get_guild().id.str()));
 
-				bot.message_create(Suggestion::create_message(suggestionString, user.format_username(), database.get_suggest_channel_id(get_temp_guild_id()), 0), [&suggestionString, &user](const dpp::confirmation_callback_t& callback) {
+				bot.message_create(Suggestion::create_message(suggestionString, user, database.get_suggest_channel_id(get_temp_guild_id()), 0), [&suggestionString, &user](const dpp::confirmation_callback_t& callback) {
 					if (callback.is_error()) {
 						std::cout << callback.get_error().message << std::endl;
 					}
 					else {
-						add_suggestion(callback.get<dpp::message>().get_url(), suggestionString, user.id.str(), get_temp_guild_id());
+						add_suggestion(callback.get<dpp::message>().get_url(), suggestionString, user, get_temp_guild_id());
 					}
 					});
 				event.reply(dpp::message("Suggestion created in: " + get_channel_url(database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())), event.command.get_guild().id.str())).set_flags(dpp::m_ephemeral));
@@ -118,10 +118,8 @@ int main()
 			dpp::snowflake suggestionChannel = std::get<dpp::snowflake>(event.get_parameter("suggestionchannel"));
 			dpp::snowflake approveChannel = std::get<dpp::snowflake>(event.get_parameter("approvechannel"));
 
-			std::string description;
-
 			std::string guildId = event.command.get_guild().id.str();
-
+			std::string description;
 			if (database.find_config(guildId) == -1) {
 				database.add_config(guildId, suggestionChannel.str(), approveChannel.str(), rolePermission.str());
 				description = "Created config with";
