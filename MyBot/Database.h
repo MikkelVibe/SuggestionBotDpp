@@ -30,13 +30,13 @@ class Database
 		// Users
 		void add_user_to_database(std::string userID, std::string discordName, boolean hasVotedUp, boolean hasVotedDown, int suggestionID);
 		std::vector<int> find_users_in_suggestion(int suggestionID);
-		boolean user_has_vote_up(sql::SQLString discorduserid, int suggestionDBID);
-		boolean user_has_vote_down(sql::SQLString discorduserid, int suggestionDBID);
-		int find_user(sql::SQLString discorduserid, int suggestionDBID);
-		boolean is_user_in_suggestion(sql::SQLString discorduseridDB, int suggestionDBID);
+		boolean user_has_vote_up(std::string discorduserid, int suggestionDBID);
+		boolean user_has_vote_down(std::string discorduserid, int suggestionDBID);
+		int find_user(std::string discorduserid, int suggestionDBID);
+		boolean is_user_in_suggestion(std::string discorduseridDB, int suggestionDBID);
 
-		void update_react_up(sql::SQLString discorduserid, int suggestionDBID);
-		void update_react_down(sql::SQLString discorduserid, int suggestionDBID);
+		void update_react_up(std::string discorduserid, int suggestionDBID);
+		void update_react_down(std::string discorduserid, int suggestionDBID);
 
 		// Configs
 		void add_config(std::string guild_id, std::string suggest_channel_id, std::string approve_channel_id, std::string role_id);
