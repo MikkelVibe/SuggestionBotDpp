@@ -233,12 +233,13 @@ std::string Database::get_creator_discord_id(int suggestionINDB) {
 
 	pstmt = con->prepareStatement("SELECT creator_discord_id FROM suggestions WHERE id = ?");
 	pstmt->setInt(1, suggestionINDB);
-	result = pstmt->executeQuery();
-
+	
 	std::string creatorid;
+	result = pstmt->executeQuery();
 	if (result->next()) {
 		creatorid = result->getString(1);
 	}
+	
 	return creatorid;
 }
 int Database::get_votes(int suggestionINDB) {

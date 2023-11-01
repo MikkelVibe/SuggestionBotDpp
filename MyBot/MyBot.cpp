@@ -49,6 +49,10 @@ std::string get_role_url(std::string roleid) {
 	return "<@&" + roleid + ">";
 }
 
+std::string get_user_url(std::string userID) {
+	return "<@" + userID + ">";
+}
+
 boolean has_role(dpp::guild_member guildMember, int configID) {
 	boolean found = false;
 	int i = 0;
@@ -191,7 +195,6 @@ int main()
 		dpp::message mess = nullptr;
 
 		std::string description = database.get_description(suggestionID);
-		dpp::user* user = dpp::find_user(dpp::snowflake(database.get_creator_discord_id(suggestionID)));
 		dpp::channel* channel_id = dpp::find_channel(database.get_suggest_channel_id(database.find_config(event.command.get_guild().id.str())));
 		
 		if (eventID == "upvote") {
@@ -203,7 +206,7 @@ int main()
 			else {
 				mess = dpp::message("Vote removed");
 			}
-			set_message(Suggestion::create_message(description, user->format_username(), channel_id->id.str(), database.get_votes(suggestionID)));
+			set_message(Suggestion::create_message(description, get_user_url(database.get_creator_discord_id(suggestionID)), channel_id->id.str(), database.get_votes(suggestionID)));
 			dpp::snowflake messageid = dpp::snowflake(database.get_message_url(suggestionID).substr(68, 19));
 			dpp::snowflake channelid = dpp::snowflake(database.get_message_url(suggestionID).substr(48, 19));
 
@@ -231,7 +234,7 @@ int main()
 			else {
 				mess = dpp::message("Vote removed");
 			}
-			set_message(Suggestion::create_message(description, user->format_username(), channel_id->id.str(), database.get_votes(suggestionID)));
+			set_message(Suggestion::create_message(description, get_user_url(database.get_creator_discord_id(suggestionID)), channel_id->id.str(), database.get_votes(suggestionID)));
 			dpp::snowflake messageid = dpp::snowflake(database.get_message_url(suggestionID).substr(68, 19));
 			dpp::snowflake channelid = dpp::snowflake(database.get_message_url(suggestionID).substr(48, 19));
 			
