@@ -11,21 +11,20 @@ sql::Statement* stmt;
 sql::ResultSet* result;
 
 // Helper functions
-
-sql::ResultSet* run_sql_command(std::string sqlString) {
+sql::ResultSet* Database::run_sql_command(std::string sqlString) {
 	sql::PreparedStatement* pstmt;
 	pstmt = con->prepareStatement(sqlString);
 	return pstmt->executeQuery();
 }
 
-sql::ResultSet* run_sql_command_with_int(std::string sqlString, int input) {
+sql::ResultSet* Database::run_sql_command_with_int(std::string sqlString, int input) {
 	sql::PreparedStatement* pstmt;
 	pstmt = con->prepareStatement(sqlString);
 	pstmt->setInt(1, input);
 	return pstmt->executeQuery();
 }
 
-sql::ResultSet* run_sql_command_with_string(std::string sqlString, std::string input) {
+sql::ResultSet* Database::run_sql_command_with_string(std::string sqlString, std::string input) {
 	sql::PreparedStatement* pstmt;
 	pstmt = con->prepareStatement(sqlString);
 	pstmt->setString(1, input);
@@ -203,7 +202,6 @@ void Database::subtract_vote(dpp::user user, int suggestionIDDB) {
 			currentVotes = result->getInt(1);
 			currentVotes++;
 		}
-
 		pstmt = con->prepareStatement("UPDATE suggestions SET votes = ? WHERE id = ?");
 		pstmt->setInt(1, currentVotes);
 		pstmt->setInt(2, suggestionIDDB);
@@ -334,7 +332,6 @@ boolean Database::user_has_vote_down(std::string discorduserid, int suggestionDB
 	if (result->next()) {
 		resultBool = result->getBoolean(1);
 	}
-
 	return resultBool;
 }
 
@@ -369,14 +366,13 @@ void Database::update_react_up(std::string discorduserid, int suggestionDBID) {
 }
 
 // SERVER CONFIGS
-int get_max_config_id() {
+int Database::get_max_id_config() {
 	int resultInt = -1;
 	result = run_sql_command("SELECT MAX(id) FROM server_config");
 
 	if (result->next()) {
 		resultInt = result->getInt(1);
 	}
-
 	return resultInt;
 }
 
@@ -385,7 +381,7 @@ void Database::add_config(std::string guild_id, std::string suggest_channel_id, 
 
 	pstmt = con->prepareStatement("INSERT INTO server_config (id, guild_id, suggest_channel_id, approve_channel_id, role_id) VALUES(?, ?, ?, ?, ?)");
 
-	pstmt->setInt(1, get_max_config_id() + 1);
+	pstmt->setInt(1, get_max_id_config() + 1);
 	pstmt->setString(2, guild_id);
 	pstmt->setString(3, suggest_channel_id);
 	pstmt->setString(4, approve_channel_id);

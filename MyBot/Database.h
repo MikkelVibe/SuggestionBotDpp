@@ -10,6 +10,11 @@ class Database
 	private:
 		int get_max_id_suggestions();
 		int get_max_id_users();
+		int get_max_id_config();
+
+		sql::ResultSet* run_sql_command(std::string sqlString);
+		sql::ResultSet* run_sql_command_with_int(std::string sqlString, int input);
+		sql::ResultSet* run_sql_command_with_string(std::string sqlString, std::string input);
 
 	public:
 		// Database handling
@@ -51,5 +56,4 @@ class Database
 		std::string get_suggest_channel_id(int configID);
 		std::string get_approve_id(int configID);
 		std::string get_role_id(int configID);
-
 };
