@@ -31,6 +31,10 @@ sql::ResultSet* Database::run_sql_command_with_string(std::string sqlString, std
 	return pstmt->executeQuery();
 }
 
+int get_result_int() {
+
+}
+
 // SUGGESTIONS
 void execute_this(sql::PreparedStatement* statement) {
 	try {
