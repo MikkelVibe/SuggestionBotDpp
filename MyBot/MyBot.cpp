@@ -5,29 +5,25 @@
 
 std::string BOT_TOKEN;
 
-
-std::vector<dpp::snowflake> roles;
-
 MyBot myBot;
 
 Database database;
 
 int guildid;
 
-dpp::message getMessage;
+dpp::message messageToGet;
 
 MyBot::MyBot() {
 
 }
 
 void set_message(dpp::message toSet) {
-	getMessage = toSet;
+	messageToGet = toSet;
 }
 
 dpp::message get_message() {
-	return getMessage;
+	return messageToGet;
 }
-
 
 int get_temp_guild_id() {
 	return guildid;
